@@ -1,0 +1,128 @@
+.openreq-container {
+  display: flex;
+  gap: 30px;
+  padding: 30px;
+  background: #f8fafc;
+}
+
+.left {
+  width: 65%;
+}
+
+.right {
+  width: 35%;
+}
+
+/* CARD */
+.card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+}
+
+.highlight {
+  border: 2px solid gold;
+}
+
+/* BADGE */
+.badge {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* TAGS */
+.tags {
+  margin: 8px 0;
+}
+
+.tag {
+  background: #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+/* BUTTON */
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* RIGHT PANEL */
+.panel {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+
+/* SUGGEST */
+.suggest {
+  background: #f1f5f9;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+/* 🔥 Mutual Matches Title */
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #1e293b;
+}
+
+/* 💎 Suggest Card (Mutual Match) */
+.suggest {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+/* ✨ Hover effect */
+.suggest:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  border-color: #3b82f6;
+}
+
+/* 🔥 Skill Title */
+.suggest p:first-child {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+/* 💬 Description text */
+.suggest p:last-child {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 🌟 Highlight badge */
+.suggest::after {
+  content: "Perfect Match";
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 11px;
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-weight: 500;
+}

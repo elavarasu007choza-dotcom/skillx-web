@@ -1,0 +1,273 @@
+/* ---------- LAYOUT ---------- */
+.messages-layout {
+  display: flex;
+  height: 100vh;
+  background: #f8fafc;
+}
+
+/* ---------- LEFT CHAT LIST ---------- */
+.chat-list {
+  width: 280px;
+  background: #0f172a;
+  color: white;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.chat-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.chat-item:hover,
+.chat-item.active {
+  background: #1e293b;
+}
+
+/* ---------- AVATAR + ONLINE DOT ---------- */
+.avatar-wrapper {
+  position: relative;
+  width: 42px;
+  height: 42px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #38bdf8;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  color: black;
+  font-size: 16px;
+}
+
+/* 🟢 REALTIME ONLINE DOT */
+.online-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  background: #22c55e;
+  border-radius: 50%;
+  border: 2px solid #0f172a;
+}
+
+.chat-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.last-msg {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* ---------- RIGHT CHAT ---------- */
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+/* HEADER */
+.chat-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 8px;
+}
+
+/* Online text in header */
+.header-online {
+  font-size: 12px;
+  color: #22c55e;
+}
+
+/* BODY */
+.chat-body {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+/* MESSAGE BUBBLES */
+.msg {
+  max-width: 65%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  position: relative;
+}
+
+.sent {
+  background: #38bdf8;
+  align-self: flex-end;
+}
+
+.received {
+  background: #e5e7eb;
+  align-self: flex-start;
+}
+
+/* ✔✔ SEEN STATUS */
+.seen {
+  font-size: 11px;
+  margin-left: 6px;
+  color: #0ea5e9;
+}
+
+/* ---------- INPUT ---------- */
+.chat-input {
+  height: 64px;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.chat-input input {
+  flex: 1;
+  border-radius: 20px;
+  padding: 0 14px;
+  border: 1px solid #cbd5f5;
+  outline: none;
+}
+
+.chat-input button {
+  border-radius: 20px;
+  padding: 0 16px;
+  background: #38bdf8;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* EMPTY STATES */
+.empty-state,
+.no-msg {
+  margin: auto;
+  color: #64748b;
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 768px) {
+  .chat-list {
+    width: 80px;
+  }
+
+  .chat-name,
+  .last-msg {
+    display: none;
+  }
+}
+.typing-indicator {
+  font-size: 12px;
+  color: #0ea5e9;
+  margin-left: 6px;
+}
+
+.typing-indicator span {
+  animation: blink 1.4s infinite both;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% { opacity: .2; }
+  20% { opacity: 1; }
+  100% { opacity: .2; }
+}
+.rating-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  backdrop-filter: blur(5px);
+}
+
+.rating-box {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 16px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  animation: popupFade 0.3s ease;
+}
+
+.rating-box h3 {
+  margin-bottom: 10px;
+}
+
+.rating-box textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 10px;
+  resize: none;
+}
+
+.rating-box input {
+  padding: 5px;
+  margin-top: 10px;
+  width: 60px;
+  text-align: center;
+}
+
+.rating-box button {
+  margin-top: 12px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rating-box button:first-of-type {
+  background: #4CAF50;
+  color: white;
+}
+
+.rating-box button:last-of-type {
+  background: #e5e7eb;
+}
+
+@keyframes popupFade {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.stars span {
+  font-size: 24px;
+  cursor: pointer;
+  margin: 5px;
+}

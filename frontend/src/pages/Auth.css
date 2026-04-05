@@ -1,0 +1,54 @@
+/* ===== COMMON AUTH LAYOUT ===== */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(
+      circle at top left,
+      rgba(56, 189, 248, 0.15),
+      transparent 40%
+    ),
+    linear-gradient(135deg, #020617, #020617);
+}
+
+.auth-card {
+  width: 380px;
+  padding: 36px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  color: #e5e7eb;
+}
+
+.auth-card p {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  outline: none;
+}
+
+.auth-card input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.auth-card span {
+  color: #38bdf8;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.auth-card span:hover {
+  text-decoration: underline;
+}

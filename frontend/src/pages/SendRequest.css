@@ -1,0 +1,204 @@
+/* 🌌 PAGE */
+.send-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #0a0f2c, #020617);
+  color: white;
+  padding: 20px 40px;
+}
+
+/* 🔍 SEARCH */
+.search-bar {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+
+  color: white;
+  font-size: 16px;
+
+  box-shadow: 0 0 10px rgba(0,150,255,0.3);
+}
+
+/* 🧱 LAYOUT */
+.main-layout {
+  display: flex;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+/* 👥 USERS */
+.users-section {
+  flex: 3;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* 🧊 CARD */
+.user-card {
+  padding: 20px;
+  border-radius: 20px;
+
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(15px);
+
+  border: 1px solid rgba(255,255,255,0.15);
+
+  box-shadow: 0 0 20px rgba(0,150,255,0.15);
+
+  text-align: center;
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(0,150,255,0.3);
+}
+
+/* 👤 IMAGE */
+.user-card img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+/* ✍️ INPUT */
+.user-card input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+
+  border-radius: 8px;
+  border: none;
+
+  background: rgba(255,255,255,0.12);
+  color: white;
+}
+
+/* 🔘 BUTTON */
+.user-card button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: white;
+
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.user-card button:hover {
+  transform: scale(1.05);
+}
+
+/* ⏳ PENDING */
+.user-card button {
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+}
+
+/* 📋 RIGHT PANEL */
+.request-panel {
+  flex: 1;
+
+  padding: 20px;
+  border-radius: 20px;
+
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(15px);
+
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 0 10px rgba(0,150,255,0.2);
+}
+.request-panel h3 {
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+
+.request-panel {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 15px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+/* Card */
+.request-card {
+  background: rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Top row */
+.request-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Name */
+.request-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Skill */
+.request-skill {
+  margin-top: 6px;
+  color: #ddd;
+}
+
+/* Status badge */
+.status {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.status.pending {
+  background: orange;
+  color: black;
+}
+
+.status.approved {
+  background: #00c853;
+  color: white;
+}
+
+.status.cancelled {
+  background: #ff5252;
+  color: white;
+}
+
+/* Button */
+.request-actions {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.delete-btn {
+  background: #ff3b3b;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}

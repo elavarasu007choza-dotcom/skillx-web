@@ -1,0 +1,141 @@
+/* 🌤 PAGE (LIGHT PREMIUM) */
+.open-page {
+  min-height: 100vh;
+  padding: 30px;
+
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  color: #0f172a;
+}
+
+/* 🧱 MAIN LAYOUT */
+.open-layout {
+  display: flex;
+  gap: 25px;
+  align-items: flex-start;
+}
+
+/* 🧊 CARD BASE */
+.card {
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(12px);
+
+  border-radius: 16px;
+  padding: 20px;
+
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+/* LEFT PANEL */
+.left-panel {
+  width: 30%;
+}
+
+/* MIDDLE */
+.middle-panel {
+  width: 35%;
+}
+
+/* RIGHT */
+.right-panel {
+  width: 30%;
+}
+
+/* INPUT */
+.input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+
+  outline: none;
+}
+
+/* BUTTON */
+.btn {
+  margin-top: 15px;
+  padding: 10px;
+  width: 100%;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg, #6366f1, #3b82f6);
+  color: white;
+  cursor: pointer;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* REQUEST CARD */
+.request-card {
+  margin-top: 12px;
+  padding: 15px;
+
+  border-radius: 12px;
+  background: white;
+
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* STATUS */
+.status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.status.open {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.status.accepted {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status.closed {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* SMALL BUTTON */
+.small-btn {
+  margin-top: 10px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.accept-btn {
+  background: #22c55e;
+  color: white;
+}
+
+.close-btn {
+  background: #ef4444;
+  color: white;
+}
+.open-layout {
+  display: flex;
+  gap: 25px;
+  align-items: flex-start;
+}
+
+/* IMPORTANT */
+.left-panel {
+  width: 30%;
+}
+
+.middle-panel {
+  width: 35%;
+}
+
+.right-panel {
+  width: 30%;
+}
