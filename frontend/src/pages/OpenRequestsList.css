@@ -5,16 +5,16 @@
   background: #f8fafc;
 }
 
-.left {
+.openreq-container .left {
   width: 65%;
 }
 
-.right {
+.openreq-container .right {
   width: 35%;
 }
 
 /* CARD */
-.card {
+.openreq-container .card {
   background: #fff;
   padding: 18px;
   border-radius: 12px;
@@ -23,41 +23,81 @@
   border: 1px solid #eee;
 }
 
-.highlight {
+.openreq-container .card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 14px;
+}
+
+.openreq-container .card p {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.openreq-container .highlight {
   border: 2px solid gold;
 }
 
 /* BADGE */
-.badge {
+.openreq-container .badge {
   color: #f59e0b;
   font-weight: 600;
 }
 
 /* TAGS */
-.tags {
+.openreq-container .tags {
   margin: 8px 0;
 }
 
-.tag {
+.openreq-container .tag {
   background: #e2e8f0;
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 12px;
   margin-right: 6px;
+  display: inline-block;
 }
 
-/* BUTTON */
-button {
-  background: #2563eb;
+/* BUTTONS */
+.openreq-container .accept-btn {
+  background: #22c55e;
   color: white;
   border: none;
   padding: 7px 14px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: auto;
+}
+
+.openreq-container .accept-btn:hover {
+  background: #16a34a;
+}
+
+.openreq-container .close-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: auto;
+}
+
+.openreq-container .close-btn:hover {
+  background: #dc2626;
 }
 
 /* RIGHT PANEL */
-.panel {
+.openreq-container .panel {
   background: white;
   padding: 15px;
   border-radius: 10px;
@@ -65,23 +105,31 @@ button {
   box-shadow: 0 1px 6px rgba(0,0,0,0.05);
 }
 
-/* SUGGEST */
-.suggest {
-  background: #f1f5f9;
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 8px;
-}
-/* 🔥 Mutual Matches Title */
-h3 {
-  font-size: 20px;
+.openreq-container .panel h3 {
+  font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #1e293b;
+  color: #0f172a;
 }
 
-/* 💎 Suggest Card (Mutual Match) */
-.suggest {
+.openreq-container .panel p {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.openreq-container .panel ul {
+  padding-left: 18px;
+}
+
+.openreq-container .panel ul li {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+/* SUGGEST */
+.openreq-container .suggest {
   background: #ffffff;
   border-radius: 14px;
   padding: 14px 16px;
@@ -93,14 +141,14 @@ h3 {
 }
 
 /* ✨ Hover effect */
-.suggest:hover {
+.openreq-container .suggest:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
   border-color: #3b82f6;
 }
 
 /* 🔥 Skill Title */
-.suggest p:first-child {
+.openreq-container .suggest p:first-child {
   font-size: 16px;
   font-weight: 600;
   color: #111827;
@@ -108,13 +156,13 @@ h3 {
 }
 
 /* 💬 Description text */
-.suggest p:last-child {
+.openreq-container .suggest p:last-child {
   font-size: 13px;
   color: #6b7280;
 }
 
 /* 🌟 Highlight badge */
-.suggest::after {
+.openreq-container .suggest::after {
   content: "Perfect Match";
   position: absolute;
   top: 10px;
@@ -125,4 +173,208 @@ h3 {
   padding: 3px 8px;
   border-radius: 8px;
   font-weight: 500;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .openreq-container {
+    padding: 10px;
+    flex-direction: column;
+  }
+  
+  .openreq-container .left,
+  .openreq-container .right {
+    width: 100%;
+  }
+  
+  .openreq-container .card {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  
+  .openreq-container .card h2 {
+    font-size: 16px;
+  }
+  
+  .openreq-container .card p {
+    font-size: 12px;
+  }
+  
+  .openreq-container .tag {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  
+  .openreq-container .accept-btn,
+  .openreq-container .close-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  
+  .openreq-container .panel {
+    padding: 12px;
+  }
+  
+  .openreq-container .panel h3 {
+    font-size: 15px;
+  }
+  
+  .openreq-container .suggest {
+    padding: 10px 12px;
+  }
+  
+  .openreq-container .suggest::after {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+
+/* Premium + Modern + Glassmorphism + Corporate overrides */
+.openreq-container {
+  min-height: 100vh;
+  padding: 24px;
+  padding-top: 78px;
+  gap: 16px;
+  font-family: "Sora", "Poppins", sans-serif;
+  position: relative;
+  background:
+    radial-gradient(1100px 520px at -10% -20%, #dbeafe 0%, transparent 58%),
+    radial-gradient(900px 420px at 110% -10%, #e0f2fe 0%, transparent 54%),
+    linear-gradient(180deg, #f8fbff 0%, #eef5fb 100%);
+}
+
+.openreq-container .back-btn {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 20;
+  padding: 9px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(191, 219, 254, 0.85);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  color: #1e3a8a;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.openreq-container .back-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(239, 246, 255, 0.95);
+}
+
+.openreq-container .left {
+  width: 64%;
+}
+
+.openreq-container .right {
+  width: 36%;
+}
+
+.openreq-container .left > h2 {
+  margin: 2px 0 14px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.openreq-container .card,
+.openreq-container .panel,
+.openreq-container .suggest {
+  border: 1px solid rgba(191, 219, 254, 0.72);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(14px);
+  border-radius: 16px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.openreq-container .request-entry {
+  margin-bottom: 14px;
+}
+
+.openreq-container .clickable-card {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.openreq-container .clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+}
+
+.openreq-container .request-owner-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.openreq-container .request-owner-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0f2fe;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.openreq-container .request-owner-name {
+  margin: 0;
+}
+
+.openreq-container .request-divider {
+  border: 0;
+  border-top: 1px dashed #cbd5e1;
+  margin-top: 10px;
+}
+
+.openreq-container .tag {
+  background: linear-gradient(145deg, #ecfeff, #e0f2fe);
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.openreq-container .accept-btn,
+.openreq-container .close-btn {
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.openreq-container .accept-btn {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.openreq-container .close-btn {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.openreq-container .panel h3 {
+  font-size: 18px;
+}
+
+.openreq-container .panel.info-panel ul {
+  margin: 8px 0 0;
+}
+
+.openreq-container .suggest::after {
+  content: "AI Match";
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+}
+
+@media (max-width: 1024px) {
+  .openreq-container {
+    flex-direction: column;
+    padding-top: 72px;
+  }
+
+  .openreq-container .left,
+  .openreq-container .right {
+    width: 100%;
+  }
+
+  .openreq-container .back-btn {
+    left: 16px;
+    top: 16px;
+  }
 }

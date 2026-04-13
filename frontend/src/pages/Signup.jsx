@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import "./Signup.css";
 
@@ -46,6 +46,34 @@ function Signup() {
     }
   };
 
+  const handleGoogleSignup = async () => {
+    try {
+      setLoading(true);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      const userRef = doc(db, "users", result.user.uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: result.user.uid,
+          name: result.user.displayName || "Google User",
+          email: result.user.email,
+          photoURL: result.user.photoURL || null,
+          createdAt: serverTimestamp(),
+        });
+      }
+      
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      console.log(err);
+      alert("Google signup failed: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="signup-page">
       <div className="signup-box">
@@ -80,6 +108,12 @@ function Signup() {
             {loading ? "Creating..." : "Create account"}
           </button>
         </form>
+
+        <p className="divider" style={{ margin: "20px 0", textAlign: "center", color: "#666" }}>or</p>
+
+        <button className="google-btn" onClick={handleGoogleSignup} disabled={loading}>
+          🔵 Continue with Google
+        </button>
 
         <div className="signup-footer">
           Already have an account?{" "}

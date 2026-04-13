@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth, db, storage } from "../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams } from "react-router-dom";
 import "./Profile.css";
 import { set } from "firebase/database";
-import { onSnapshot } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import BackButton from "../components/BackButton";
 
 /* 🔥 Reputation Badge */
 function ReputationBadge({ score }) {
@@ -41,6 +41,33 @@ const uploadToCloudinary = async (file) => {
 
 export default function Profile() {
   const navigate =useNavigate();
+  const handleShareProfile = async () => {
+    const profileUid = uid || auth.currentUser?.uid;
+    if (!profileUid) return;
+
+    const shareUrl = `${window.location.origin}/user/${profileUid}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${profile.name || "SkillX User"} on SkillX`,
+          text: "Check out this SkillX profile",
+          url: shareUrl,
+        });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setToast("Profile link copied ✅");
+        setTimeout(() => setToast(""), 2500);
+      } else {
+        window.prompt("Copy profile link:", shareUrl);
+      }
+    } catch (err) {
+      if (err?.name !== "AbortError") {
+        console.error("Share failed", err);
+      }
+    }
+  };
+
   const handleCoverUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -66,6 +93,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [connectionCount, setConnectionCount] = useState(0);
   const { uid } = useParams();
   const [toast, setToast] = useState("");
 
@@ -104,6 +132,7 @@ export default function Profile() {
   const [learnInput, setLearnInput] = useState("");
   const [teachInput, setTeachInput] = useState("");
   const [teachLevel, setTeachLevel] = useState("");
+  const bioRef = useRef(null);
 
 
 
@@ -130,8 +159,73 @@ export default function Profile() {
     return () => unsub();
   }, [uid]);
 
+  useEffect(() => {
+    if (!bioRef.current) return;
+    bioRef.current.style.height = "auto";
+    bioRef.current.style.height = `${bioRef.current.scrollHeight}px`;
+  }, [profile.bio, editMode]);
+
+  useEffect(() => {
+    const profileUid = uid || profile.uid || auth.currentUser?.uid;
+    if (!profileUid) return;
+
+    let sentAccepted = [];
+    let receivedAccepted = [];
+
+    const updateCount = () => {
+      const connectedUserIds = new Set();
+
+      sentAccepted.forEach((item) => {
+        if (item?.receiverId && item.receiverId !== profileUid) {
+          connectedUserIds.add(item.receiverId);
+        }
+      });
+
+      receivedAccepted.forEach((item) => {
+        if (item?.senderId && item.senderId !== profileUid) {
+          connectedUserIds.add(item.senderId);
+        }
+      });
+
+      setConnectionCount(connectedUserIds.size);
+    };
+
+    const sentQuery = query(
+      collection(db, "connectionRequests"),
+      where("status", "==", "accepted"),
+      where("senderId", "==", profileUid)
+    );
+
+    const receivedQuery = query(
+      collection(db, "connectionRequests"),
+      where("status", "==", "accepted"),
+      where("receiverId", "==", profileUid)
+    );
+
+    const unsubSent = onSnapshot(sentQuery, (snap) => {
+      sentAccepted = snap.docs.map((d) => d.data());
+      updateCount();
+    });
+
+    const unsubReceived = onSnapshot(receivedQuery, (snap) => {
+      receivedAccepted = snap.docs.map((d) => d.data());
+      updateCount();
+    });
+
+    return () => {
+      unsubSent();
+      unsubReceived();
+    };
+  }, [uid, profile.uid]);
+
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
+  };
+
+  const handleBioChange = (e) => {
+    handleChange(e);
+    e.target.style.height = "auto";
+    e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
   /* PHOTO UPLOAD */
@@ -283,6 +377,7 @@ export default function Profile() {
 
   return (
     <div className="profile-page">
+      <BackButton />
       {toast && <div className="toast">{toast}</div>}
 
       {/* 🔷 COVER */}
@@ -308,11 +403,26 @@ export default function Profile() {
 
       {/* 🔷 HEADER */}
       <div className="profile-header-card">
-        {isOwnProfile && (
-          <button onClick={() => setEditMode(!editMode)}>
-            {editMode ? "Cancel" : "Edit Profile"}
+        <div className="profile-header-actions">
+          <button
+            className="profile-top-btn share-btn icon-btn"
+            onClick={handleShareProfile}
+            title="Share Profile"
+            aria-label="Share Profile"
+          >
+            ↗
           </button>
-        )}
+          {isOwnProfile && (
+            <button
+              className="profile-top-btn icon-btn"
+              onClick={() => setEditMode(!editMode)}
+              title={editMode ? "Cancel Edit" : "Edit Profile"}
+              aria-label={editMode ? "Cancel Edit" : "Edit Profile"}
+            >
+              {editMode ? "✕" : "✎"}
+            </button>
+          )}
+        </div>
         <div className="profile-header">
 
           <img
@@ -338,6 +448,7 @@ export default function Profile() {
 
             <p>⭐ {profile.rating || 0} | 💬 {profile.totalReviews || 0}</p>
             <p> Sessions completed: {profile.sessionsCompleted || 0}</p>
+            <p>🤝 Connections: {connectionCount}</p>
             {canGetCertificate && (
               <button onClick={() => navigate("/certificate")}>
                 🎓 Get Certificate
@@ -365,10 +476,12 @@ export default function Profile() {
         <h3>About</h3>
 
         <textarea
+          ref={bioRef}
+          className="bio-textarea"
           name="bio"
           placeholder="Tell about yourself..."
           value={profile.bio}
-          onChange={handleChange}
+          onChange={handleBioChange}
           disabled={!editMode}
         />
 

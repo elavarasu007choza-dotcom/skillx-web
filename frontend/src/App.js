@@ -1,13 +1,15 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
-import { setupPresence } from "./firebasePresence";
 
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VideoCall from "./components/VideoCall";
-// import WebRTCCall from "./pages/WebRTCCall"; 
+import IncomingCallNotifier from "./components/IncomingCallNotifier";
+import SessionReminder from "./components/SessionReminder";
+// import WebRTCCall from "./pages/WebRTCCall";
 import CallHistory from "./pages/CallHistory";
+import { initNotificationSounds } from "./utils/notificationSound";
 
 import Dashboard from "./pages/Dashboard";
 import Notifications from "./pages/Notifications";
@@ -25,13 +27,16 @@ import ScheduleSession from "./pages/ScheduleSession";
 import MySessions from "./pages/MySessions";
 
 function App() {
-  useEffect(() => {
-    setupPresence();
-  }, []);
+// Initialize notification sounds on app load
+useEffect(() => {
+initNotificationSounds();
+}, []);
 
-  return (
-    <Router>
-      <Routes>
+return (
+<Router>
+<SessionReminder />
+<IncomingCallNotifier />
+<Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -51,6 +56,7 @@ function App() {
           <Route path="/certificate" element={<Certificate />} />
         <Route path="/user/:uid" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
         <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+        <Route path="/messages/:userId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       </Routes>
     </Router>

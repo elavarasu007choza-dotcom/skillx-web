@@ -5,9 +5,52 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+}
+
 body {
   background: linear-gradient(135deg, #e3f2fd, #f9f9f9);
   min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+/* Back Button */
+.back-btn {
+  padding: 10px 16px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.back-btn:hover {
+  background: #1d4ed8;
+}
+
+/* Mobile: Show back button always */
+@media (max-width: 768px) {
+  .back-btn {
+    padding: 12px 18px;
+    font-size: 15px;
+  }
 }
 
 .center-box {
@@ -15,37 +58,40 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 15px;
 }
 
-.card {
+.center-box .card {
   background: white;
   padding: 30px;
-  width: 350px;
+  width: 100%;
+  max-width: 350px;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
-.card h2 {
+.center-box .card h2 {
   margin-bottom: 10px;
 }
 
-.card p {
+.center-box .card p {
   color: #666;
   margin-bottom: 20px;
 }
 
-input {
+.center-box input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin-bottom: 15px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  font-size: 14px;
 }
 
-button {
+.center-box button {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background: #1976d2;
   color: white;
   border: none;
@@ -54,7 +100,7 @@ button {
   font-size: 15px;
 }
 
-button:hover {
+.center-box button:hover {
   background: #125aa3;
 }
 
@@ -62,4 +108,41 @@ button:hover {
   color: #1976d2;
   cursor: pointer;
   font-weight: 500;
+}
+
+/* Global Mobile Responsive */
+@media (max-width: 768px) {
+  .center-box .card {
+    padding: 20px;
+    max-width: 320px;
+  }
+  
+  .center-box input {
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .center-box button {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .center-box {
+    padding: 10px;
+  }
+  
+  .center-box .card {
+    padding: 15px;
+    max-width: 100%;
+  }
+  
+  .center-box .card h2 {
+    font-size: 20px;
+  }
+  
+  .center-box .card p {
+    font-size: 13px;
+  }
 }

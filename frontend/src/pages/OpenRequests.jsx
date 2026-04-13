@@ -13,7 +13,8 @@ import { auth, db } from "../firebase";
 import "./OpenRequest.css";
 import { deleteDoc ,getDoc} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import BackButton from "../components/BackButton";
+import { sendNotification } from "../utils/sendNotification";
 
 function OpenRequests() {
   const user = auth.currentUser;
@@ -163,10 +164,20 @@ const navigate = useNavigate();
       status: "accepted",
       acceptedBy: user.uid,
     });
+
+    await sendNotification(
+      req.createdBy,
+      `Your open request "${req.skill}" was accepted!`,
+      "match",
+      "Open Request Accepted"
+    );
+
+    navigate("/messages");
   };
 
   return (
     <div className="open-page">
+      <BackButton />
       <div className="open-layout">
 
         {/* =================================
@@ -191,6 +202,7 @@ const navigate = useNavigate();
             onChange={(e) => setDescription(e.target.value)}
           />
           <input
+            className="input"
             placeholder="My Skills (java, react)"
             value={mySkills}
             onChange={(e) => setMySkills(e.target.value)}
@@ -205,7 +217,7 @@ const navigate = useNavigate();
 
 
           <h4>ℹ️ How Open Requests Work</h4>
-          <ul style={{ paddingLeft: "18px" }}>
+          <ul className="info-list">
             <li>Post an open skill request</li>
             <li>Other users can accept it</li>
             <li>Once accepted, collaboration starts</li>
@@ -226,17 +238,18 @@ const navigate = useNavigate();
           )}
 
           {allOpenRequests.map((r) => (
-            <div key={r.id} className="request-card"
+            <div key={r.id} className="request-card clickable-card"
               onClick={() => navigate(`/user/${r.createdBy}`)}
-              style={{ cursor: "pointer" }}>
+            >
 
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div className="request-owner-row">
                 <img
+                  className="request-owner-img"
                   src={r.photoURL || `https://ui-avatars.com/api/?name=${r.name}`
                   }
-                  style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }}
+                  alt={r.name || "User"}
                 />
-                <p><b>{r.name || "User"}</b></p>
+                <p className="request-owner-name"><b>{r.name || "User"}</b></p>
               </div>
 
               <p><b>📘 Skill Need: {r.skill}</b></p>
@@ -279,29 +292,31 @@ const navigate = useNavigate();
           )}
 
           {myRequests.map((r) => (
-            <div key={r.id} className="request-card">
+            <div key={r.id} className="request-card my-request-card">
               <p><b>{r.skill}</b></p>
 
               <span className={`status ${r.status}`}>
                 {r.status}
               </span>
 
-              {r.status === "open" && (
+              <div className="my-request-actions">
+                {r.status === "open" && (
+                  <button
+                    className="icon-btn close-icon"
+                    onClick={() => closeRequest(r.id)}
+                    title="Close Request"
+                  >
+                    ❌
+                  </button>
+                )}
                 <button
-                  className="small-btn close-btn"
-                  onClick={() => closeRequest(r.id)}
+                  className="icon-btn delete-icon"
+                  onClick={() => deleteRequest(r.id)}
+                  title="Delete Request"
                 >
-                  Close
+                  🗑️
                 </button>
-              )}
-
-              <button
-                className="small-btn close-btn"
-                onClick={() => deleteRequest(r.id)}
-              >
-                Delete
-              </button>
-
+              </div>
 
             </div>
           ))}

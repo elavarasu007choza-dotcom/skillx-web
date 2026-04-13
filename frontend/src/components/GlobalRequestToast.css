@@ -1,0 +1,36 @@
+.global-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999999;
+  max-width: 360px;
+  border: 1px solid rgba(125, 211, 252, 0.55);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.88));
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.3);
+  animation: toastSlideIn 0.25s ease;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .global-toast {
+    left: 12px;
+    right: 12px;
+    max-width: none;
+    top: 12px;
+  }
+}

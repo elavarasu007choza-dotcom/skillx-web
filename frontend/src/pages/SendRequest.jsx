@@ -7,21 +7,36 @@ import {
   getDocs,
   addDoc,
   doc,
-  getDoc,
   updateDoc,
   serverTimestamp,
-  orderBy,
+  onSnapshot,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import "./SendRequest.css";
 import { deleteDoc } from "firebase/firestore";
+import { sendNotification } from "../utils/sendNotification";
+import BackButton from "../components/BackButton";
 
 function SendRequest() {
   const handleDelete = async (id) => {
     try {
-      await deleteDoc(doc(db, "requests", id));
+      await deleteDoc(doc(db, "skillRequests", id));
+      setMyRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (err) {
       console.error("Delete error:", err);
+    }
+  };
+
+  const handleCancel = async (id) => {
+    try {
+      await updateDoc(doc(db, "skillRequests", id), {
+        status: "cancelled",
+      });
+      setMyRequests((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status: "cancelled" } : r))
+      );
+    } catch (err) {
+      console.error("Cancel error:", err);
     }
   };
   const [users, setUsers] = useState([]);
@@ -52,17 +67,16 @@ function SendRequest() {
   useEffect(() => {
     if (!auth.currentUser) return;
 
-    const loadMyRequests = async () => {
-      const q = query(
-        collection(db, "requests"),
-        where("from", "==", auth.currentUser.uid)
-      );
+    const q = query(
+      collection(db, "skillRequests"),
+      where("senderId", "==", auth.currentUser.uid)
+    );
 
-      const snap = await getDocs(q);
+    const unsub = onSnapshot(q, (snap) => {
       setMyRequests(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    };
+    });
 
-    loadMyRequests();
+    return () => unsub();
   }, []);
 
   /* 🔹 Filter */
@@ -72,14 +86,24 @@ function SendRequest() {
     );
   }, [users, search]);
 
+  const userNameById = useMemo(
+    () => Object.fromEntries(users.map((u) => [u.uid, u.name || "User"])),
+    [users]
+  );
+
   /* 🔹 Check pending */
   const isPending = (uid) =>
-    myRequests.some((r) => r.to === uid && r.status === "pending");
+    myRequests.some((r) => r.receiverId === uid && r.status === "pending");
 
   /* 🔹 Send Request */
   const handleSend = async (userId) => {
     const skill = skillMap[userId] || "";
     const message = messageMap[userId] || "";
+
+    if (isPending(userId)) {
+      alert("Request already pending for this user");
+      return;
+    }
 
     if (!skill.trim()) {
       alert("Enter skill");
@@ -96,18 +120,20 @@ function SendRequest() {
       status: "pending",
       createdAt: serverTimestamp(),
     });
-    alert("Request Sent ✅");
-  };
 
-  /* ❌ Cancel */
-  const cancelRequest = async (id) => {
-    await updateDoc(doc(db, "requests", id), {
-      status: "cancelled",
-    });
+    /* Send notification to receiver */
+    const senderName = auth.currentUser.displayName || auth.currentUser.email || "Someone";
+    await sendNotification(userId, `📨 New skill request from ${senderName}`, "request");
+
+    setSkillMap((prev) => ({ ...prev, [userId]: "" }));
+    setMessageMap((prev) => ({ ...prev, [userId]: "" }));
+
+    alert("Request Sent ✅");
   };
 
   return (
     <div className="send-page">
+      <BackButton />
 
       {/* 🔍 SEARCH */}
       <input
@@ -161,6 +187,7 @@ function SendRequest() {
                 <input
                   placeholder="Skill"
                   onClick={(e) => e.stopPropagation()}
+                  value={skillMap[u.uid] || ""}
                   onChange={(e) =>
                     setSkillMap({ ...skillMap, [u.uid]: e.target.value })
                   }
@@ -170,6 +197,7 @@ function SendRequest() {
                 <input
                   placeholder="Message"
                   onClick={(e) => e.stopPropagation()}
+                  value={messageMap[u.uid] || ""}
                   onChange={(e) =>
                     setMessageMap({ ...messageMap, [u.uid]: e.target.value })
                   }
@@ -201,24 +229,39 @@ function SendRequest() {
         <div className="request-panel">
           <h3>My Requests</h3>
 
+          {myRequests.length === 0 && (
+            <p style={{ color: "#aaa", fontSize: "13px" }}>No requests sent yet</p>
+          )}
+
           {myRequests.map((r) => (
             <div key={r.id} className="request-card">
 
               <div className="request-top">
-                <h4 className="request-name">{r.toName || "User"}</h4>
+                <h4 className="request-name">
+                  {userNameById[r.receiverId] || r.toName || "User"}
+                </h4>
                 <span className={`status ${r.status}`}>
                   {r.status}
                 </span>
               </div>
 
-              <p className="request-skill">{r.skill}</p>
+              <p className="request-skill">📘 {r.skill}</p>
+              {r.message && <p className="request-message">💬 {r.message}</p>}
 
               <div className="request-actions">
                 <button
+                  className="cancel-btn"
+                  onClick={() => handleCancel(r.id)}
+                  title="Cancel Request"
+                >
+                  ❌
+                </button>
+                <button
                   className="delete-btn"
                   onClick={() => handleDelete(r.id)}
+                  title="Delete Request"
                 >
-                  Cancel
+                  🗑️
                 </button>
               </div>
 

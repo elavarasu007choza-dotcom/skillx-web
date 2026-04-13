@@ -3,79 +3,120 @@ import { db, auth } from "../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useParams, useNavigate } from "react-router-dom";
 import { sendNotification } from "../utils/sendNotification";
-export default function ScheduleSession() {
+import BackButton from "../components/BackButton";
+import "./ScheduleSession.css";
 
+export default function ScheduleSession() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const otherUserId = userId;
-
-  const [date,setDate] = useState("");
-  const [time,setTime] = useState("");
-  const [skill,setSkill] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [skill, setSkill] = useState("");
+  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const scheduleSession = async () => {
+    if (!date || !time || !skill.trim()) {
+      alert("Please fill skill, date and time");
+      return;
+    }
 
-    if(!date || !time) return alert("Select date and time");
+    if (!auth.currentUser?.uid) {
+      alert("Please login again");
+      return;
+    }
 
-    await addDoc(collection(db,"sessions"),{
-      teacherId: auth.currentUser.uid,
-      learnerId: userId,
-      skill,
-      date,
-      time,
-      status:"pending",
-      createdAt:serverTimestamp()
-    });
+    setLoading(true);
 
-    await sendNotification(
-otherUserId,
+    try {
+      await addDoc(collection(db, "scheduledSessions"), {
+        teacherId: auth.currentUser.uid,
+        learnerId: userId,
+        skill: skill.trim(),
+        note: note.trim(),
+        scheduledDate: new Date(`${date}T${time}`),
+        status: "scheduled",
+        createdAt: serverTimestamp(),
+        participants: [auth.currentUser.uid, userId],
+      });
 
-"📅 Session scheduled",
-"session"
-);
+      await sendNotification(
+        userId,
+        `Session scheduled for ${skill.trim()} on ${date} at ${time}`,
+        "session",
+        "Session Scheduled"
+      );
 
-    alert("Session Request Sent");
-
-    navigate("/my-sessions");
+      alert("Session scheduled successfully");
+      navigate("/my-sessions");
+    } catch (error) {
+      console.error("Schedule session error", error);
+      alert("Unable to schedule session. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const minDate = new Date().toISOString().slice(0, 10);
+
   return (
+    <div className="schedule-page">
+      <BackButton />
+      <div className="schedule-card">
+        <h2>Schedule Session</h2>
+        <p className="schedule-subtitle">
+          Plan a focused session with your connection and lock your calendar.
+        </p>
 
-    <div style={{padding:"30px"}}>
+        <div className="schedule-grid">
+          <label>
+            Skill
+            <input
+              placeholder="Example: React, Java, UI/UX"
+              value={skill}
+              onChange={(e) => setSkill(e.target.value)}
+            />
+          </label>
 
-      <h2>📅 Schedule Session</h2>
+          <label>
+            Date
+            <input
+              type="date"
+              min={minDate}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
 
-      <br/>
+          <label>
+            Time
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </label>
 
-      <input
-        placeholder="Skill"
-        value={skill}
-        onChange={(e)=>setSkill(e.target.value)}
-      />
+          <label className="full-row">
+            Session note (optional)
+            <textarea
+              rows="3"
+              placeholder="Add context, goals, or agenda for this session"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </label>
+        </div>
 
-      <br/><br/>
+        <div className="schedule-meta">
+          <span className="meta-pill">Participant: {userId?.slice(0, 8)}...</span>
+          <span className="meta-pill">Status: Scheduled</span>
+        </div>
 
-      <input
-        type="date"
-        value={date}
-        onChange={(e)=>setDate(e.target.value)}
-      />
-
-      <br/><br/>
-
-      <input
-        type="time"
-        value={time}
-        onChange={(e)=>setTime(e.target.value)}
-      />
-
-      <br/><br/>
-
-      <button onClick={scheduleSession}>
-        Schedule Session
-      </button>
-
+        <button onClick={scheduleSession} disabled={loading}>
+          {loading ? "Scheduling..." : "Schedule Session"}
+        </button>
+      </div>
     </div>
-
   );
 }

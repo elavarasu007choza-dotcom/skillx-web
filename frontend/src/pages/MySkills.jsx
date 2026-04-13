@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./MySkills.css";
+import BackButton from "../components/BackButton";
 
 function MySkills() {
   const [skill, setSkill] = useState("");
@@ -18,6 +19,7 @@ function MySkills() {
 
   return (
     <div className="page-wrapper">
+      <BackButton />
       <h2 className="page-title">My Skills</h2>
       <p className="page-sub">
         Add and manage the skills you can teach

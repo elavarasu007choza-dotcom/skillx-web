@@ -9,8 +9,9 @@ import {
   increment,
   getDoc
 } from "firebase/firestore";
+import { sendNotification } from "../utils/sendNotification";
 
-export default function RateUser({ toUserId, roomID, onClose }) {
+export default function RateUser({ toUserId, roomID, onClose, onSuccess }) {
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -60,10 +61,21 @@ export default function RateUser({ toUserId, roomID, onClose }) {
         rating: avgRating
       });
 
+      // Send notification to rated user
+      await sendNotification(
+        toUserId,
+        `You received a ${rating}⭐ review!`,
+        "review",
+        "New Review"
+      );
+
       alert("Review submitted ⭐");
 
-      onClose(); // CLOSE POPUP
-      Props.onSuccess && props.onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose?.();
+      }
 
     } catch (err) {
       console.log(err);

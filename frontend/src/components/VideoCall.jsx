@@ -1,18 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
-import { addDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { addDoc, collection, query, where, getDocs, doc, updateDoc, increment } from "firebase/firestore";
 import { db, auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
 import RateUser from "./RateUser";
 import Whiteboard from "./Whiteboard";
 import { createPortal } from "react-dom";
 import { Button } from "@excalidraw/excalidraw";
 import CodeEditor from "./CodeEditor";
-import { doc, updateDoc, increment } from "firebase/firestore";
 
 const VideoCall = () => {
+  const navigate = useNavigate();
   const containerRef = useRef(null);
+  const zpRef = useRef(null);
   const hasJoined = useRef(false);
-  const user =auth.currentUser;
+  const callStartTime = useRef(null);
+  const user = auth.currentUser;
 
   const [showRating, setShowRating] = useState(false);
   const [showCompletePopup, setShowCompletePopup] = useState(false);
@@ -25,13 +28,21 @@ const VideoCall = () => {
 
   const [showEditor, setShowEditor] = useState(false);
   const [isEditorMinimized, setIsEditorMinimized] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    setIsReady(true);
+  }, []);
 
+  useEffect(() => {
+    const sessionKey = "zego_join_" + window.location.pathname;
+    
+    if (!isReady || !containerRef.current || !auth.currentUser) return;
+    if (sessionStorage.getItem(sessionKey)) return;
     if (hasJoined.current) return;
-    hasJoined.current = true;
 
+    sessionStorage.setItem(sessionKey, "true");
+    hasJoined.current = true;
 
     const roomFromURL = window.location.pathname.split("/video-call/")[1];
     const roomID = roomFromURL || "SkillExchangeRoom";
@@ -44,8 +55,6 @@ const VideoCall = () => {
     const remoteUserId = params.get("User");
     const remoteUserName = params.get("name");
 
-    console.log("Remote ID:", remoteUserId);
-
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
       719135717,
       "3afe9c9f03987b9da0999aeefba1b151",
@@ -55,6 +64,8 @@ const VideoCall = () => {
     );
 
     const zp = ZegoUIKitPrebuilt.create(kitToken);
+    zpRef.current = zp;
+    callStartTime.current = Date.now();
 
     zp.joinRoom({
       container: containerRef.current,
@@ -72,8 +83,11 @@ const VideoCall = () => {
 
 
 
-
       onLeaveRoom: async () => {
+        const duration = callStartTime.current 
+          ? Math.floor((Date.now() - callStartTime.current) / 1000) 
+          : 0;
+        
         try {
           await addDoc(collection(db, "callHistory"), {
             caller: auth.currentUser?.uid,
@@ -84,10 +98,12 @@ const VideoCall = () => {
             participants: [auth.currentUser?.uid, remoteUserId],
             roomID: roomID,
             status: "completed",
+            duration: duration,
+            type: "video",
             createdAt: new Date(),
           });
 
-          // ✅ CHECK ALREADY RATED
+          // CHECK ALREADY RATED
           const q = query(
             collection(db, "reviews"),
             where("fromUser", "==", auth.currentUser.uid),
@@ -102,7 +118,22 @@ const VideoCall = () => {
             setRoomIDState(roomID);
             setShowRating(true);
           } else {
-            window.location.href = "/messages";
+            const duration = callStartTime.current 
+              ? Math.floor((Date.now() - callStartTime.current) / 1000) 
+              : 0;
+            await addDoc(collection(db, "callHistory"), {
+              caller: auth.currentUser?.uid,
+              callerName: auth.currentUser?.email,
+              receiver: remoteUserId,
+              receiverName: remoteUserName,
+              participants: [auth.currentUser?.uid, remoteUserId],
+              roomID: roomID,
+              status: "completed",
+              duration: duration,
+              type: "video",
+              createdAt: new Date(),
+            });
+            navigate("/messages", { replace: true });
           }
 
         } catch (err) {
@@ -110,31 +141,46 @@ const VideoCall = () => {
         }
       },
     });
-  }, []);
+
+    return () => {
+      if (zpRef.current) {
+        zpRef.current.destroy();
+        zpRef.current = null;
+      }
+    };
+  }, [isReady]);
 
   
 
   const markCompleted = async () => {
-  const userRef = doc(db, "users", user.uid);
+    if (!user?.uid) return;
+    
+    const userRef = doc(db, "users", user.uid);
 
-  await updateDoc(userRef, {
-    sessionsCompleted: increment(1),
-  });
+    await updateDoc(userRef, {
+      sessionsCompleted: increment(1),
+    });
 
-  alert("Session Completed ✅");
-  setShowCompletePopup(false);
-};
+    setShowCompletePopup(false);
+    navigate("/messages", { replace: true });
+  };
 
   // TAB CLOSE SAFETY
   useEffect(() => {
     const handleBeforeUnload = async () => {
+      const duration = callStartTime.current 
+        ? Math.floor((Date.now() - callStartTime.current) / 1000) 
+        : 0;
+      
       try {
         await addDoc(collection(db, "callHistory"), {
           caller: auth.currentUser?.uid,
           callerName: auth.currentUser?.email,
-          users: [auth.currentUser?.uid],
+          participants: [auth.currentUser?.uid],
           status: "abandoned",
-          time: new Date(),
+          duration: duration,
+          type: "video",
+          createdAt: new Date(),
         });
       } catch (err) {
         console.log(err);
@@ -157,19 +203,29 @@ const VideoCall = () => {
 
       <button
         onClick={() => setShowEditor(true)}
+        title="Open Code Editor"
+        aria-label="Open Code Editor"
         style={{
           position: "fixed",
           bottom: "20px",
-          left: "180px",
+          left: "110px",
           zIndex: 999999,
-          padding: "10px",
-          background: "blue",
+          width: "48px",
+          height: "48px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "18px",
+          fontWeight: "700",
+          background: "linear-gradient(135deg, #2563eb, #0ea5e9)",
           color: "white",
-          borderRadius: "8px",
-          border: "none"
+          borderRadius: "14px",
+          border: "none",
+          boxShadow: "0 8px 18px rgba(37,99,235,0.32)",
+          cursor: "pointer"
         }}
       >
-        Code Editor
+        &lt;/&gt;
       </button>
 
       <button
@@ -177,20 +233,28 @@ const VideoCall = () => {
           console.log("WHITEBOARD CLICKED");
           setShowWhiteboard(prev => !prev);
         }}
+        title="Open Whiteboard"
+        aria-label="Open Whiteboard"
         style={{
           position: "fixed",
           bottom: "20px",
-          left: "20%",
+          left: "20px",
           zIndex: 999999,
-          padding: "10px 15px",
-          background: "#000",
+          width: "48px",
+          height: "48px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "20px",
+          background: "linear-gradient(135deg, #0f172a, #1e293b)",
           color: "#fff",
-          borderRadius: "8px",
+          borderRadius: "14px",
           border: "none",
-          cursor: "pointer"
+          cursor: "pointer",
+          boxShadow: "0 8px 18px rgba(15,23,42,0.32)"
         }}
       >
-        Whiteboard
+        📝
       </button>
 
       {/* ⭐ RATING POPUP */}
@@ -201,8 +265,7 @@ const VideoCall = () => {
             roomID={roomIDState}
             onClose={() => {
               setShowRating(false);
-              
-              
+              navigate("/messages", { replace: true });
             }}
             onSuccess={() =>{
               setShowRating(false);
@@ -215,10 +278,15 @@ const VideoCall = () => {
       )}
 
       {showCompletePopup && (
-        <div className="popup">
-          <h3>Session Completed?</h3>
-          <button onClick={markCompleted}>Yes</button>
-          
+        <div className="rating-popup">
+          <div className="rating-box">
+            <h3>Session Completed?</h3>
+            <p>Did the session go well?</p>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <button onClick={markCompleted}>Yes</button>
+              <button onClick={() => setShowCompletePopup(false)}>No</button>
+            </div>
+          </div>
         </div>
       )}
 

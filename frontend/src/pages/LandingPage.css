@@ -197,8 +197,22 @@
 
 /* Responsive */
 @media (max-width: 900px) {
-  .lp-hero { grid-template-columns: 1fr; }
-  .lp-hero-left h1 { font-size: 40px; }
+  .lp-hero { 
+    grid-template-columns: 1fr; 
+    padding: 40px 20px;
+  }
+  .lp-hero-left h1 { font-size: 36px; }
+  .lp-hero-left p { font-size: 14px; }
+  .lp-hero-right img { width: 80%; }
+  .lp-features { padding: 40px 20px; }
+  .lp-features-grid { grid-template-columns: 1fr; gap: 15px; }
+  .lp-footer { padding: 30px 20px; }
+}
+
+@media (max-width: 480px) {
+  .lp-hero-left h1 { font-size: 28px; }
+  .lp-hero-left .btn-group { flex-direction: column; gap: 10px; }
+  .lp-hero-left .btn { padding: 12px 20px; font-size: 14px; }
 }
 /* =========================
    MICRO ANIMATIONS (STEP 5)

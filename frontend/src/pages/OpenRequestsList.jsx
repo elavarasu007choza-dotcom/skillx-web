@@ -13,6 +13,8 @@ import {
 import { db, auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import "./OpenRequestsList.css";
+import BackButton from "../components/BackButton";
+import { sendNotification } from "../utils/sendNotification";
 
 function OpenRequestsList() {
   const user = auth.currentUser;
@@ -31,16 +33,6 @@ function OpenRequestsList() {
 
 
   const [userSkills, setUserSkills] = useState([]);
-
-  /* ===============================
-     🔹 KEYWORD / TAG MAPPING (EXISTING)
-     =============================== */
-  const skillMap = {
-    frontend: ["react", "html", "css", "javascript", "ui"],
-    backend: ["java", "python", "node", "api"],
-    database: ["sql", "mysql", "mongodb"],
-    data: ["ml", "ai", "data", "analysis"],
-  };
 
   /* ===============================
      🔹 LOAD USER SKILLS
@@ -153,11 +145,21 @@ function OpenRequestsList() {
       status: "accepted",
       acceptedBy: user.uid,
     });
+
+    await sendNotification(
+      req.createdBy,
+      `Your open request "${req.skill}" was accepted!`,
+      "match",
+      "Open Request Accepted"
+    );
+
+    navigate("/messages");
   };
 
 
   return (
     <div className="openreq-container">
+      <BackButton />
 
       {/* 🔹 LEFT SIDE – OPEN REQUESTS */}
       <div className="left">
@@ -173,28 +175,23 @@ function OpenRequestsList() {
             <div
               key={r.id}
 
-              className="card"
+              className="card request-entry clickable-card"
               onClick={() => navigate(`/user/${r.createdBy}`)}
-              style={{ cursor: "pointer" }}
             >
 
 
               {/* 🔹 PROFILE */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div className="request-owner-row">
                 <img
+                  className="request-owner-img"
                   src={
                     r.photoURL ||
                     `https://ui-avatars.com/api/?name=${r.name || "User"}`
                   }
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                  }}
+                  alt={r.name || "User"}
                 />
 
-                <p><b>{r.name || "User"}</b></p>
+                <p className="request-owner-name"><b>{r.name || "User"}</b></p>
               </div>
 
               {/* 🔹 SKILL */}
@@ -254,7 +251,7 @@ function OpenRequestsList() {
               ) : null
               }
 
-              <hr />
+              <hr className="request-divider" />
             </div>
           );
         })}
@@ -280,20 +277,16 @@ function OpenRequestsList() {
           {suggestedUsers.map((u) => (
             <div
               key={u.id}
-              className="suggest"
+              className="suggest clickable-card"
               onClick={() => navigate(`/user/${u.id}`)}
-              style={{ cursor: "pointer" }}
             >
               <img
+                className="request-owner-img"
                 src={
                   u.photoURL ||
                   `https://ui-avatars.com/api/?name=${u.name || "User"}`
                 }
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                }}
+                alt={u.name || "User"}
               />
 
               <p><b>{u.name}</b></p>
@@ -307,64 +300,57 @@ function OpenRequestsList() {
             </div>
           ))}
         </div>
+        <div className="panel">
+          <h3>🔥 Mutual Matches</h3>
 
-
-
-        <h3>🔥 Mutual Matches</h3>
-
-        {getMutualMatches()
-          .filter((r) => r.createdBy !== user?.uid) // ❌ own request remove
-          .map((r) => (
-            <div
-              key={r.id}
-              className="suggest"
-              style={{ cursor: "pointer" }}
-              onClick={() => navigate(`/user/${r.createdBy}`)}
-            >
-
-              {/* 🔹 PROFILE */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <img
-                  src={
-                    r.photoURL ||
-                    `https://ui-avatars.com/api/?name=${r.name || "User"}`
-                  }
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                  }}
-                />
-
-                <p><b>{r.name || "User"}</b></p>
-              </div>
-
-              {/* 🔹 MATCH INFO */}
-              <p><b>🤝 Skill Matched: {r.skill}</b></p>
-              <p>🔥 Mutual exchange is possible</p>
-
-              {/* 🔹 ACCEPT BUTTON */}
-              <button
-                className="small-btn accept-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  acceptRequest(r);
-                }}
+          {getMutualMatches()
+            .filter((r) => r.createdBy !== user?.uid)
+            .map((r) => (
+              <div
+                key={r.id}
+                className="suggest clickable-card"
+                onClick={() => navigate(`/user/${r.createdBy}`)}
               >
-                Accept
-              </button>
+                <div className="request-owner-row">
+                  <img
+                    className="request-owner-img"
+                    src={
+                      r.photoURL ||
+                      `https://ui-avatars.com/api/?name=${r.name || "User"}`
+                    }
+                    alt={r.name || "User"}
+                  />
 
-            </div>
-          ))}
+                  <p className="request-owner-name"><b>{r.name || "User"}</b></p>
+                </div>
 
-        <div style={{ marginBottom: "20px" }}>
+                <p><b>🤝 Skill Matched: {r.skill}</b></p>
+                <p>🔥 Mutual exchange is possible</p>
+
+                <button
+                  className="small-btn accept-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    acceptRequest(r);
+                  }}
+                >
+                  Accept
+                </button>
+              </div>
+            ))}
+
+          {getMutualMatches().filter((r) => r.createdBy !== user?.uid).length === 0 && (
+            <p>No mutual matches yet</p>
+          )}
+        </div>
+
+        <div className="panel info-panel">
           <h3>Status Info</h3>
           <p>🟢 Open – Anyone can accept</p>
           <p>🟡 Accepted – Collaboration started</p>
         </div>
 
-        <div>
+        <div className="panel info-panel">
           <h3>Tips</h3>
           <ul>
             <li>Accept only one request at a time</li>

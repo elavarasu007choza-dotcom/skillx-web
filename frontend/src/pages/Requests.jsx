@@ -11,14 +11,28 @@ import {
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import "./Requests.css";
+import BackButton from "../components/BackButton";
 
 export default function Requests() {
   const [requests, setRequests] = useState([]);
+  const [usersMap, setUsersMap] = useState({});
   const navigate = useNavigate();
   const user = auth.currentUser;
 
 
   const [skillRequests, setSkillRequests] = useState([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "users"), (snap) => {
+      const map = {};
+      snap.forEach((item) => {
+        map[item.id] = item.data();
+      });
+      setUsersMap(map);
+    });
+
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -33,7 +47,7 @@ export default function Requests() {
         snap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        }))
+        })).filter((req) => req.status !== "accepted")
       );
     });
 
@@ -55,18 +69,19 @@ export default function Requests() {
         id: doc.id,
         ...doc.data(),
       }));
-      setRequests(data);
+      setRequests(data.filter((req) => req.status !== "accepted"));
     });
 
     return () => unsub();
   }, [user]);
 
   // ✅ ACCEPT REQUEST
-  const acceptRequest = async (id) => {
+  const acceptRequest = async (id, senderId) => {
     try {
       await updateDoc(doc(db, "connectionRequests", id), {
         status: "accepted",
       });
+      navigate(`/messages/${senderId}`);
     } catch (err) {
       console.error(err);
     }
@@ -85,14 +100,23 @@ export default function Requests() {
     await updateDoc(doc(db, "skillRequests", id), {
       status: "accepted",
     });
+    navigate("/messages");
   };
 
   const rejectSkill = async (id) => {
     await deleteDoc(doc(db, "skillRequests", id));
+    navigate("/messages");
   };
 
   return (
     <div className="requests-page">
+      <BackButton />
+      <div className="requests-header">
+        <h1>Incoming Requests</h1>
+        <p>Accept and manage your new connections and skill requests.</p>
+      </div>
+
+      <div className="requests-grid">
 
       {/* LEFT SIDE → Connection Requests */}
       <div className="left">
@@ -100,92 +124,93 @@ export default function Requests() {
 
         {requests.length === 0 && <p>No requests</p>}
 
-        {requests.map((r) => (
-          <div
-            key={r.id}
-            className="request-card"
-            onClick={() => navigate(`/user/${r.senderId}`)}
-          >
-            <div className="request-user">
-              <img
-                src={
-                  r.senderPhoto ||
-                  `https://ui-avatars.com/api/?name=${r.senderName}`
-                }
-                alt=""
-              />
+        {requests.map((r) => {
+          const profile = usersMap[r.senderId] || {};
+          const senderName = profile.name || r.senderName || "User";
+          const senderPhoto =
+            profile.photoURL ||
+            r.senderPhoto ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`;
 
-              <div>
-                <h4>{r.senderName}</h4>
-                <p>🤝 Connection request</p>
+          return (
+            <div
+              key={r.id}
+              className="request-card"
+              onClick={() => navigate(`/user/${r.senderId}`)}
+            >
+              <div className="request-user">
+                <img src={senderPhoto} alt={senderName} />
+
+                <div>
+                  <h4>{senderName}</h4>
+                  <p>🤝 Connection request</p>
+                </div>
+              </div>
+
+              <div
+                className="request-actions"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button onClick={() => acceptRequest(r.id, r.senderId)}>
+                  ✅ Accept
+                </button>
+                <button onClick={() => rejectRequest(r.id)}>
+                  ❌ Reject
+                </button>
               </div>
             </div>
-
-            <div
-              className="request-actions"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {r.status === "pending" ? (
-                <>
-                  <button onClick={() => acceptRequest(r.id)}>
-                    ✅ Accept
-                  </button>
-                  <button onClick={() => rejectRequest(r.id)}>
-                    ❌ Reject
-                  </button>
-                </>
-              ) : (
-                <span>✅ Connected</span>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* 🔥 MIDDLE SIDE → Skill Requests (YOU WANT THIS) */}
       <div className="middle">
-        <h2>📤 Sent Skill Requests</h2>
+        <h2>📘 Incoming Skill Requests</h2>
 
         {skillRequests.length === 0 && <p>No skill requests</p>}
 
-        {skillRequests.map((r) => (
-          <div
-            key={r.id}
-            className="request-card"
-            onClick={() => navigate(`/user/${r.senderId}`)}
-          >
-            <div className="request-user">
-              <img
-                src={
-                  r.senderPhoto ||
-                  `https://ui-avatars.com/api/?name=${r.senderName}`
-                }
-                alt=""
-              />
+        {skillRequests.map((r) => {
+          const profile = usersMap[r.senderId] || {};
+          const senderName = profile.name || r.senderName || "User";
+          const senderPhoto =
+            profile.photoURL ||
+            r.senderPhoto ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`;
 
-              <div>
-                <h4>{r.senderName}</h4>
-                <p><b>Skill:</b> {r.skill}</p>
-                <p><b>Message:</b> {r.message}</p>
+          return (
+            <div
+              key={r.id}
+              className="request-card"
+              onClick={() => navigate(`/user/${r.senderId}`)}
+            >
+              <div className="request-user">
+                <img src={senderPhoto} alt={senderName} />
+
+                <div>
+                  <h4>{senderName}</h4>
+                  <p><b>Skill:</b> {r.skill}</p>
+                  <p><b>Message:</b> {r.message}</p>
+                </div>
+              </div>
+
+              <div
+                className="request-actions"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button onClick={() => acceptSkill(r.id)}>
+                  ✅ Accept
+                </button>
+
+                <button onClick={() => rejectSkill(r.id)}>
+                  ❌ Reject
+                </button>
               </div>
             </div>
-
-            <div
-              className="request-actions"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button onClick={() => acceptSkill(r.id)}>
-                ✅ Accept
-              </button>
-
-              <button onClick={() => rejectSkill(r.id)}>
-                ❌ Reject
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-      
+
+      </div>
 
     </div>
   )};
