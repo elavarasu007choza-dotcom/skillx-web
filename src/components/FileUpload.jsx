@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { supabase } from "../supabase";
 
 const getFileTypeFromPath = (fileName) => {
   if (!fileName) return "application/octet-stream";
@@ -24,42 +23,49 @@ const getFileTypeFromPath = (fileName) => {
   return mimeTypes[ext] || "application/octet-stream";
 };
 
-const uploadToSupabase = async (file) => {
+const uploadToCloudinary = async (file) => {
+  const cloudName = "dyvfflwuo";
+  const uploadPreset = "skillx_files";
+  
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
   try {
-    console.log("📤 Starting Supabase upload...");
-    console.log(" File Name:", file.name);
-    console.log(" File Type:", file.type);
-    console.log(" File Size:", (file.size / 1024 / 1024).toFixed(2), "MB");
-
-    // Create unique file name with timestamp
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    console.log("📤 Starting Cloudinary upload...");
+    console.log("   Cloud Name:", cloudName);
+    console.log("   Upload Preset:", uploadPreset);
+    console.log("   File Name:", file.name);
+    console.log("   File Type:", file.type);
+    console.log("   File Size:", (file.size / 1024 / 1024).toFixed(2), "MB");
     
-    // Upload to Supabase Storage
-    const { error } = await supabase.storage
-      .from('uploads')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+    console.log("   Upload URL:", uploadUrl);
+    
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      body: formData,
+      timeout: 30000
+    });
 
-    if (error) {
-      console.error("❌ Supabase upload error:", error);
-      throw error;
+    console.log("📥 Cloudinary response status:", response.status);
+    
+    const data = await response.json();
+    console.log("📥 Cloudinary response data:", data);
+
+    if (!response.ok) {
+      const errorMsg = data.error?.message || data.error || `Upload failed with status ${response.status}`;
+      console.error("❌ Cloudinary error:", errorMsg);
+      throw new Error(errorMsg);
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('uploads')
-      .getPublicUrl(fileName);
-
-    console.log("✅ File uploaded successfully to Supabase:");
-    console.log(" URL:", publicUrl);
-    
-    return publicUrl;
+    const fileUrl = data.secure_url || data.url;
+    console.log("✅ File uploaded successfully to Cloudinary:");
+    console.log("   URL:", fileUrl);
+    return fileUrl;
   } catch (err) {
-    console.error("❌ Supabase upload failed:", err.message);
-    throw new Error(`Supabase upload failed: ${err.message}`);
+    console.error("❌ Cloudinary upload failed:", err.message);
+    throw new Error(`Cloudinary upload failed: ${err.message}`);
   }
 };
 
@@ -77,7 +83,7 @@ export default function FileUpload({ chatId, onFileUpload }) {
 
     console.log("File selected:", file.name, file.size, file.type);
 
-    // Validate file size (100MB limit)
+    // Validate file size (100MB limit for Cloudinary)
     const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
       alert("File too large! Maximum size is 100MB.");
@@ -90,9 +96,9 @@ export default function FileUpload({ chatId, onFileUpload }) {
 
     try {
       setUploadProgress(30);
-      console.log("🚀 Starting Supabase upload for:", file.name);
-
-      const url = await uploadToSupabase(file);
+      console.log("🚀 Starting Cloudinary upload for:", file.name);
+      
+      const url = await uploadToCloudinary(file);
       setUploadProgress(100);
 
       console.log("File uploaded successfully:", url);
