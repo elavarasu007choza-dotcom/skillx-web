@@ -1,0 +1,325 @@
+/* 🌌 PAGE */
+.send-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #0a0f2c, #020617);
+  color: white;
+  padding: 20px 40px;
+  padding-top: 78px;
+  position: relative;
+}
+
+.send-page .back-btn {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 20;
+  padding: 9px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(125, 211, 252, 0.38);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(10px);
+  color: #e0f2fe;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.28);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.send-page .back-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(15, 23, 42, 0.74);
+}
+
+/* 🔍 SEARCH */
+.search-bar {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+
+  color: white;
+  font-size: 16px;
+
+  box-shadow: 0 0 10px rgba(0,150,255,0.3);
+}
+
+/* 🧱 LAYOUT */
+.main-layout {
+  display: flex;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+/* 👥 USERS */
+.users-section {
+  flex: 3;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* 🧊 CARD */
+.user-card {
+  padding: 20px;
+  border-radius: 20px;
+
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(15px);
+
+  border: 1px solid rgba(255,255,255,0.15);
+
+  box-shadow: 0 0 20px rgba(0,150,255,0.15);
+
+  text-align: center;
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(0,150,255,0.3);
+}
+
+/* 👤 IMAGE */
+.user-card img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+/* ✍️ INPUT */
+.user-card input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+
+  border-radius: 8px;
+  border: none;
+
+  background: rgba(255,255,255,0.12);
+  color: white;
+}
+
+/* 🔘 BUTTON */
+.user-card button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: white;
+
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.user-card button:hover {
+  transform: scale(1.05);
+}
+
+/* ⏳ PENDING */
+.user-card button {
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+}
+
+/* 📋 RIGHT PANEL */
+.send-page .request-panel {
+  flex: 1;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 0 10px rgba(0,150,255,0.2);
+}
+
+.send-page .request-panel h3 {
+  color: #ffffff;
+  margin-bottom: 14px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Card */
+.send-page .request-card {
+  background: rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Top row */
+.send-page .request-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Name */
+.send-page .request-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+/* Skill */
+.send-page .request-skill {
+  margin-top: 6px;
+  color: #ddd;
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+/* Status badge */
+.send-page .status {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.send-page .status.pending {
+  background: orange;
+  color: black;
+}
+
+.send-page .status.approved {
+  background: #00c853;
+  color: white;
+}
+
+.send-page .status.cancelled {
+  background: #ff5252;
+  color: white;
+}
+
+/* Button */
+.send-page .request-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.send-page .cancel-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  width: auto;
+}
+
+.send-page .cancel-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.4);
+}
+
+.send-page .delete-btn {
+  background: transparent;
+  border: 1px solid rgba(255,59,59,0.3);
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: #ff3b3b;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  width: auto;
+}
+
+.send-page .delete-btn:hover {
+  background: rgba(255,59,59,0.15);
+  border-color: #ff3b3b;
+}
+
+/* Message text */
+.send-page .request-message {
+  margin-top: 4px;
+  color: #bbb;
+  font-size: 12px;
+  margin-bottom: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .send-page {
+    padding: 10px;
+    padding-top: 70px;
+  }
+
+  .send-page .back-btn {
+    top: 14px;
+    left: 12px;
+  }
+  
+  .search-bar {
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .main-layout {
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+  }
+  
+  .users-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .user-card {
+    padding: 12px;
+  }
+  
+  .user-card img {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .user-card button {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  .send-page .request-panel {
+    padding: 15px;
+  }
+  
+  .send-page .request-card {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+  
+  .send-page .request-name {
+    font-size: 14px;
+  }
+  
+  .send-page .status {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .users-grid {
+    grid-template-columns: 1fr;
+  }
+}
