@@ -6,6 +6,11 @@ import "./Profile.css";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
 
+const getEnv = (key, fallback) => {
+  const value = process.env[key];
+  return typeof value === "string" && value.trim() ? value : fallback;
+};
+
 /* 🔥 Reputation Badge */
 function ReputationBadge({ score }) {
   let badge = "New User";
@@ -19,11 +24,11 @@ function ReputationBadge({ score }) {
 const uploadToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET);
+  formData.append("upload_preset", getEnv("REACT_APP_CLOUDINARY_UPLOAD_PRESET", "skillx_files"));
 
   try {
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${getEnv("REACT_APP_CLOUDINARY_CLOUD_NAME", "dyvfflwuo")}/image/upload`,
       {
         method: "POST",
         body: formData,

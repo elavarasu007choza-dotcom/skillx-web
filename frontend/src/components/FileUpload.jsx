@@ -1,5 +1,10 @@
 import { useRef, useState } from "react";
 
+const getEnv = (key, fallback) => {
+  const value = process.env[key];
+  return typeof value === "string" && value.trim() ? value : fallback;
+};
+
 const getFileTypeFromPath = (fileName) => {
   if (!fileName) return "application/octet-stream";
   const ext = fileName.split(".").pop()?.toLowerCase();
@@ -24,8 +29,8 @@ const getFileTypeFromPath = (fileName) => {
 };
 
 const uploadToCloudinary = async (file) => {
-  const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+  const cloudName = getEnv("REACT_APP_CLOUDINARY_CLOUD_NAME", "dyvfflwuo");
+  const uploadPreset = getEnv("REACT_APP_CLOUDINARY_UPLOAD_PRESET", "skillx_files");
   
   const formData = new FormData();
   formData.append("file", file);
