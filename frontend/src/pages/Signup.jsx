@@ -67,7 +67,7 @@ function Signup() {
       
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      console.log(err);
+      console.error("Google signup error:", err);
       alert("Google signup failed: " + err.message);
     } finally {
       setLoading(false);

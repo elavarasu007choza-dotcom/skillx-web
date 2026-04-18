@@ -20,26 +20,24 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./Messages.css";
 import { sendNotification } from "../utils/sendNotification";
-import { playMessageSound, playCallSound, stopCallSound } from "../utils/notificationSound";
 import FileUpload from "../components/FileUpload";
 import FilePreview from "../components/FilePreview";
 
 export default function Messages() {
-const QUICK_EXCHANGE_TEXT = "Shall we exchange our skill ?";
+  const QUICK_EXCHANGE_TEXT = "Shall we exchange our skill ?";
 
-const [currentUser, setCurrentUser] = useState(null);
-const [chats, setChats] = useState([]);
-const [selectedChat, setSelectedChat] = useState(null);
-const [liveChat, setLiveChat] = useState(null);
-const [messages, setMessages] = useState([]);
-const [text, setText] = useState("");
-const [presenceMap, setPresenceMap] = useState({});
-const [usersMap, setUsersMap] = useState({});
-const [unreadMap, setUnreadMap] = useState({});
-const [uploadedFile, setUploadedFile] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [chats, setChats] = useState([]);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [liveChat, setLiveChat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState("");
+  const [presenceMap, setPresenceMap] = useState({});
+  const [usersMap, setUsersMap] = useState({});
+  const [unreadMap, setUnreadMap] = useState({});
+  const [uploadedFile, setUploadedFile] = useState(null);
 
-const [handledCallId, setHandledCallId] = useState(null);
-const [deleteConfirm, setDeleteConfirm] = useState(null); // { messageId, senderId, isMine }
+  const [handledCallId, setHandledCallId] = useState(null);
 
   const typingTimeout = useRef(null);
   const lastMsgCount = useRef(0);
@@ -123,15 +121,10 @@ const [deleteConfirm, setDeleteConfirm] = useState(null); // { messageId, sender
       setUsersMap(map);
     });
   }, []);
-// Initialize notification sounds
-useEffect(() => {
-sendAudio.current = new Audio("/sounds/send.mp3");
-receiveAudio.current = new Audio("/sounds/receive.mp3");
-// Initialize global notification sounds
-import("../utils/notificationSound").then(({ initNotificationSounds }) => {
-initNotificationSounds();
-});
-}, []);
+  useEffect(() => {
+    sendAudio.current = new Audio("/sounds/send.mp3");
+    receiveAudio.current = new Audio("/sounds/receive.mp3");
+  }, []);
 
   /* 🟢 PRESENCE */
   useEffect(() => {
@@ -268,18 +261,15 @@ initNotificationSounds();
         .map((d) => ({ id: d.id, ...d.data() }))
         .filter((m) => !m.hiddenFor?.includes(currentUser.uid));
 
-if (msgs.length > lastMsgCount.current && lastMsgCount.current !== 0) {
+      if (msgs.length > lastMsgCount.current && lastMsgCount.current !== 0) {
 
-const last = msgs[msgs.length - 1];
+        const last = msgs[msgs.length - 1];
 
-if (last.senderId !== currentUser.uid) {
-// Play message received sound
-receiveAudio.current?.play().catch(() => { });
-// Also play global notification sound
-playMessageSound();
-}
+        if (last.senderId !== currentUser.uid) {
+          receiveAudio.current?.play().catch(() => { });
+        }
 
-}
+      }
 
       lastMsgCount.current = msgs.length;
       setMessages(msgs);
@@ -318,7 +308,6 @@ playMessageSound();
   const requestCall = async (type) => {
 
     if (!selectedChat) return;
-    console.log("CHAT DATA:", selectedChat);
 
     const roomID = "room_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
 
@@ -374,7 +363,6 @@ playMessageSound();
         if (handledCallId === callDoc.id) return;
 
         const data = callDoc.data();
-        console.log("FULL DATA:",data);
 
         if (data.status === "accepted") {
 
@@ -419,7 +407,7 @@ playMessageSound();
 
     return () => unsub();
 
-  }, [currentUser, navigate, handledCallId]);
+  }, [currentUser, navigate, handledCallId, selectedChat]);
 
   /* 📞 CALL FEATURE END */
 
@@ -496,44 +484,33 @@ playMessageSound();
     sendMessage();
   };
 
-const deleteMessage = async (messageId, senderId) => {
-if (!selectedChat || !currentUser) return;
+  const deleteMessage = async (messageId, senderId) => {
+    if (!selectedChat || !currentUser) return;
 
-const isMine = senderId === currentUser.uid;
+    const isMine = senderId === currentUser.uid;
+    const ok = window.confirm(isMine ? "Delete this message?" : "Delete this message for you?");
+    if (!ok) return;
 
-// Show custom confirmation dialog
-setDeleteConfirm({ messageId, senderId, isMine, show: true });
-};
+    try {
+      if (isMine) {
+        await deleteDoc(doc(db, "chats", selectedChat.id, "messages", messageId));
+      } else {
+        await updateDoc(doc(db, "chats", selectedChat.id, "messages", messageId), {
+          hiddenFor: arrayUnion(currentUser.uid),
+        });
+      }
+    } catch (err) {
+      if (isMine) {
+        await updateDoc(doc(db, "chats", selectedChat.id, "messages", messageId), {
+          hiddenFor: arrayUnion(currentUser.uid),
+        });
+      } else {
+        console.error("Delete message failed", err);
+      }
+    }
 
-const confirmDelete = async () => {
-if (!deleteConfirm || !deleteConfirm.messageId) return;
-
-const { messageId, senderId, isMine } = deleteConfirm;
-
-try {
-if (isMine) {
-await deleteDoc(doc(db, "chats", selectedChat.id, "messages", messageId));
-} else {
-await updateDoc(doc(db, "chats", selectedChat.id, "messages", messageId), {
-hiddenFor: arrayUnion(currentUser.uid),
-});
-}
-setMessages((prev) => prev.filter((m) => m.id !== messageId));
-} catch (err) {
-console.error("Delete failed:", err);
-if (isMine) {
-await updateDoc(doc(db, "chats", selectedChat.id, "messages", messageId), {
-hiddenFor: arrayUnion(currentUser.uid),
-});
-}
-}
-
-setDeleteConfirm(null);
-};
-
-const cancelDelete = () => {
-setDeleteConfirm(null);
-};
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  };
 
   const toDateValue = (value) => {
     if (!value) return null;
@@ -636,7 +613,15 @@ setDeleteConfirm(null);
             >
 
                 <div className="avatar-wrapper">
-                  <div className="avatar">{chat.otherName[0]}</div>
+                  {usersMap[chat.otherUid]?.photoURL ? (
+                    <img
+                      src={usersMap[chat.otherUid].photoURL}
+                      alt={chat.otherName}
+                      className="avatar avatar-img"
+                    />
+                  ) : (
+                    <div className="avatar">{chat.otherName?.[0] || "U"}</div>
+                  )}
                   {chat.otherOnline && <span className="online-dot" />}
                   {unreadMap[chat.id] && <span className="chat-unread-dot" />}
                 </div>
@@ -673,7 +658,13 @@ setDeleteConfirm(null);
 
             <div className="chat-header">
               <div className="chat-header-main">
-                <strong>{activeChat.otherName}</strong>
+                <strong 
+                  onClick={() => navigate(`/user/${activeChat.otherUid}`)}
+                  style={{ cursor: "pointer" }}
+                  title="View profile"
+                >
+                  {activeChat.otherName}
+                </strong>
                 <span className={`header-presence ${isOtherOnline ? "online" : "offline"}`}>
                   <span className={`header-dot ${isOtherOnline ? "online" : "offline"}`} />
                   {isTyping
@@ -849,125 +840,23 @@ setDeleteConfirm(null);
               </div>
             )}
 
-<div className="chat-input">
-<FileUpload chatId={selectedChat.id} onFileUpload={setUploadedFile} />
-<input
-value={text}
-onChange={onTextChange}
-onKeyDown={handleMessageKeyDown}
-placeholder="Type a message..."
-/>
-<button onClick={handleSendClick}>
-Send
-</button>
-</div>
+            <div className="chat-input">
+              <FileUpload chatId={selectedChat.id} onFileUpload={setUploadedFile} />
+              <input
+                value={text}
+                onChange={onTextChange}
+                onKeyDown={handleMessageKeyDown}
+                placeholder="Type a message..."
+              />
+              <button onClick={handleSendClick}>
+                Send
+              </button>
+            </div>
+          </>
 
-{/* Custom Delete Confirmation Modal */}
-{deleteConfirm?.show && (
-  <div style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10000,
-    animation: "fadeIn 0.2s ease"
-  }}>
-    <div style={{
-      backgroundColor: "white",
-      borderRadius: "12px",
-      padding: "24px",
-      maxWidth: "400px",
-      width: "90%",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-      animation: "slideUp 0.3s ease"
-    }}>
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        marginBottom: "16px"
-      }}>
-        <span style={{ fontSize: "28px" }}>🗑️</span>
-        <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#333" }}>
-          Delete Message
-        </h3>
-      </div>
-      
-      <p style={{
-        margin: "0 0 24px 0",
-        fontSize: "15px",
-        color: "#666",
-        lineHeight: 1.5
-      }}>
-        {deleteConfirm.isMine 
-          ? "Are you sure you want to delete this message? This action cannot be undone."
-          : "Do you want to hide this message for yourself?"}
-      </p>
-      
-      <div style={{
-        display: "flex",
-        gap: "12px",
-        justifyContent: "flex-end"
-      }}>
-        <button
-          onClick={cancelDelete}
-          style={{
-            padding: "10px 20px",
-            fontSize: "14px",
-            fontWeight: "500",
-            backgroundColor: "#f5f5f5",
-            color: "#333",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            transition: "all 0.2s ease"
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = "#e0e0e0";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = "#f5f5f5";
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={confirmDelete}
-          style={{
-            padding: "10px 20px",
-            fontSize: "14px",
-            fontWeight: "500",
-            backgroundColor: "#f44336",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            transition: "all 0.2s ease"
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = "#d32f2f";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = "#f44336";
-          }}
-        >
-          {deleteConfirm.isMine ? "Delete" : "Hide"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        )}
 
-</>
-
-)}
-
-</section>
+      </section>
 
     </div>
 

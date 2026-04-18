@@ -22,6 +22,7 @@ import SessionReminder from "../components/SessionReminder";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend
 } from "recharts";
+import { playSound } from "../utils/notificationSound";
 
 
 export default function Dashboard() {
@@ -37,7 +38,6 @@ export default function Dashboard() {
     matches: 0,
   });
   const [chartData, setChartData] = useState([]);
-  const [callHistoryCount, setCallHistoryCount] = useState(0);
 
   useEffect(() => {
     if (!auth.currentUser?.uid) return;
@@ -116,7 +116,6 @@ export default function Dashboard() {
       addEvents(ratingsData, "ratings", (x) => x.createdAt);
 
       setChartData(base.map(({ key, ...rest }) => rest));
-      setCallHistoryCount(callsData.length);
     };
 
     const unsubSessions = onSnapshot(
@@ -255,6 +254,8 @@ export default function Dashboard() {
         if (change.type !== "added") return;
         const data = change.doc.data();
         if (!data?.message) return;
+
+        playSound(data.type || "notification");
 
         const icon = data.type === "message" ? "💬" : "🔔";
         setDashboardToast(`${icon} ${data.message}`);
@@ -455,7 +456,7 @@ export default function Dashboard() {
     if (!uid) return;
 
     const activitiesData = [];
-    let unsub1, unsub2, unsub3, unsub4;
+    let unsub1, unsub2, unsub3;
 
     const loadActivities = async () => {
       unsub1 = onSnapshot(query(collection(db, "openRequests"), orderBy("createdAt", "desc")), (snap) => {

@@ -8,7 +8,10 @@ function LandingPage() {
     <div className="lp">
       {/* Top Nav */}
       <header className="lp-nav">
-        <div className="lp-brand">SkillX</div>
+        <div className="lp-brand">
+          <span className="lp-brand-logo" aria-hidden="true">🎯</span>
+          <span>SkillX</span>
+        </div>
         <nav className="lp-nav-actions">
           <button className="lp-link" onClick={() => navigate("/login")}>
             Login

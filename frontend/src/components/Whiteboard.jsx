@@ -1,4 +1,9 @@
-import { Excalidraw } from "@excalidraw/excalidraw";
+import * as ExcalidrawLib from "@excalidraw/excalidraw/dist/excalidraw.production.min.js";
+
+const Excalidraw =
+	ExcalidrawLib.Excalidraw ||
+	ExcalidrawLib.default?.Excalidraw ||
+	ExcalidrawLib.default;
 
 export default function Whiteboard() {
 return (

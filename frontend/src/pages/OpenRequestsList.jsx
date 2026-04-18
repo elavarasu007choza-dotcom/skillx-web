@@ -84,7 +84,7 @@ function OpenRequestsList() {
     });
 
     return () => unsub();
-  }, [userSkills]);
+  }, [user, userSkills]);
 
   /* ===============================
      🔹 LOAD OPEN REQUESTS

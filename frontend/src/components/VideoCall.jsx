@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import RateUser from "./RateUser";
 import Whiteboard from "./Whiteboard";
 import { createPortal } from "react-dom";
-import { Button } from "@excalidraw/excalidraw";
 import CodeEditor from "./CodeEditor";
 
 const VideoCall = () => {
@@ -23,7 +22,6 @@ const VideoCall = () => {
   const [roomIDState, setRoomIDState] = useState(null);
 
   const [showWhiteboard, setShowWhiteboard] = useState(false);
-  const [minimized, setMinimized] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
   const [showEditor, setShowEditor] = useState(false);
@@ -137,7 +135,7 @@ const VideoCall = () => {
           }
 
         } catch (err) {
-          console.log("Error saving call history:", err);
+          console.error("Error saving call history:", err);
         }
       },
     });
@@ -148,7 +146,7 @@ const VideoCall = () => {
         zpRef.current = null;
       }
     };
-  }, [isReady]);
+  }, [isReady, navigate]);
 
   
 
@@ -183,7 +181,7 @@ const VideoCall = () => {
           createdAt: new Date(),
         });
       } catch (err) {
-        console.log(err);
+        console.error("Error in beforeunload handler:", err);
       }
     };
 
@@ -230,7 +228,6 @@ const VideoCall = () => {
 
       <button
         onClick={() => {
-          console.log("WHITEBOARD CLICKED");
           setShowWhiteboard(prev => !prev);
         }}
         title="Open Whiteboard"

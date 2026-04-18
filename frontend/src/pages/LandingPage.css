@@ -21,9 +21,20 @@
 }
 
 .lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.3px;
+}
+
+.lp-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  line-height: 1;
 }
 
 .lp-nav-actions {
@@ -197,6 +208,10 @@
 
 /* Responsive */
 @media (max-width: 900px) {
+  .lp-brand-logo {
+    font-size: 24px;
+  }
+
   .lp-hero { 
     grid-template-columns: 1fr; 
     padding: 40px 20px;

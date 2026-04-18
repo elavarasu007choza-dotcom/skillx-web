@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
@@ -12,28 +12,52 @@ import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath = location.state?.from?.pathname || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [infoMsg, setInfoMsg] = useState("");
+  const [popup, setPopup] = useState({ open: false, message: "", type: "error" });
+  const popupTimerRef = useRef(null);
+
+  const showPopup = (message, type = "error") => {
+    if (popupTimerRef.current) {
+      clearTimeout(popupTimerRef.current);
+    }
+
+    setPopup({ open: true, message, type });
+
+    popupTimerRef.current = setTimeout(() => {
+      setPopup((prev) => ({ ...prev, open: false }));
+    }, 3200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (popupTimerRef.current) {
+        clearTimeout(popupTimerRef.current);
+      }
+    };
+  }, []);
 
   // 🔐 Email Login
   const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
-      alert("Enter email & password");
+      showPopup("Enter email and password");
       return;
     }
 
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/dashboard", { replace: true });
+      navigate(redirectPath, { replace: true });
     } catch (err) {
-      alert("Invalid email or password");
+      showPopup("Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -59,10 +83,10 @@ function Login() {
         });
       }
 
-      navigate("/dashboard", { replace: true });
+      navigate(redirectPath, { replace: true });
     } catch (err) {
-      console.log(err);
-      alert("Google login failed: " + err.message);
+      console.error("Google login error:", err);
+      showPopup("Google login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -97,6 +121,20 @@ function Login() {
 
   return (
     <div className="login-page">
+      {popup.open && (
+        <div className={`auth-popup ${popup.type}`} role="alert" aria-live="assertive">
+          <div className="auth-popup-icon">!</div>
+          <div className="auth-popup-msg">{popup.message}</div>
+          <button
+            type="button"
+            className="auth-popup-close"
+            onClick={() => setPopup((prev) => ({ ...prev, open: false }))}
+            aria-label="Close notification"
+          >
+            x
+          </button>
+        </div>
+      )}
       <div className="login-shell">
         {/* LEFT SIDE */}
         <div className="login-left">

@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { supabase } from "../supabase";
 
 const getFileTypeFromPath = (fileName) => {
   if (!fileName) return "application/octet-stream";
@@ -24,42 +23,36 @@ const getFileTypeFromPath = (fileName) => {
   return mimeTypes[ext] || "application/octet-stream";
 };
 
-const uploadToSupabase = async (file) => {
+const uploadToCloudinary = async (file) => {
+  const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+  
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
   try {
-    console.log("📤 Starting Supabase upload...");
-    console.log(" File Name:", file.name);
-    console.log(" File Type:", file.type);
-    console.log(" File Size:", (file.size / 1024 / 1024).toFixed(2), "MB");
-
-    // Create unique file name with timestamp
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
     
-    // Upload to Supabase Storage
-    const { error } = await supabase.storage
-      .from('uploads')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      body: formData,
+      timeout: 30000
+    });
 
-    if (error) {
-      console.error("❌ Supabase upload error:", error);
-      throw error;
+    if (!response.ok) {
+      const data = await response.json();
+      const errorMsg = data.error?.message || data.error || `Upload failed with status ${response.status}`;
+      console.error("Cloudinary upload error:", errorMsg);
+      throw new Error(errorMsg);
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('uploads')
-      .getPublicUrl(fileName);
-
-    console.log("✅ File uploaded successfully to Supabase:");
-    console.log(" URL:", publicUrl);
-    
-    return publicUrl;
+    const data = await response.json();
+    const fileUrl = data.secure_url || data.url;
+    return fileUrl;
   } catch (err) {
-    console.error("❌ Supabase upload failed:", err.message);
-    throw new Error(`Supabase upload failed: ${err.message}`);
+    console.error("Cloudinary upload failed:", err.message);
+    throw new Error(`Cloudinary upload failed: ${err.message}`);
   }
 };
 
@@ -71,13 +64,10 @@ export default function FileUpload({ chatId, onFileUpload }) {
   const handleFile = async (e) => {
     const file = e.target.files[0];
     if (!file) {
-      console.log("No file selected");
       return;
     }
 
-    console.log("File selected:", file.name, file.size, file.type);
-
-    // Validate file size (100MB limit)
+    // Validate file size (100MB limit for Cloudinary)
     const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
       alert("File too large! Maximum size is 100MB.");
@@ -90,16 +80,12 @@ export default function FileUpload({ chatId, onFileUpload }) {
 
     try {
       setUploadProgress(30);
-      console.log("🚀 Starting Supabase upload for:", file.name);
-
-      const url = await uploadToSupabase(file);
+      
+      const url = await uploadToCloudinary(file);
       setUploadProgress(100);
-
-      console.log("File uploaded successfully:", url);
 
       // Determine file type
       const fileType = file.type || getFileTypeFromPath(file.name);
-      console.log("File type resolved:", fileType);
 
       // Pass file data back to parent
       if (onFileUpload) {
@@ -108,14 +94,13 @@ export default function FileUpload({ chatId, onFileUpload }) {
           fileName: file.name,
           fileType: fileType,
         };
-        console.log("✅ Calling onFileUpload with:", fileData);
         onFileUpload(fileData);
       }
 
       e.target.value = "";
     } catch (error) {
-      console.error("❌ Upload failed:", error);
-      alert(`❌ File upload failed: ${error.message}`);
+      console.error("File upload failed:", error);
+      alert(`File upload failed: ${error.message}`);
       e.target.value = "";
     } finally {
       setIsUploading(false);

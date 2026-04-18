@@ -1,5 +1,11 @@
 {
-  "dependencies": {
-    "react-router-dom": "^7.12.0"
-  }
+  "name": "skillx",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "functions"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
 }

@@ -78,7 +78,7 @@ export default function RateUser({ toUserId, roomID, onClose, onSuccess }) {
       }
 
     } catch (err) {
-      console.log(err);
+      console.error("Rating submission error:", err);
     }
   };
 

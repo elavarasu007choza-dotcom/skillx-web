@@ -7,22 +7,22 @@ import { getDatabase } from "firebase/database";
 
 // ✅ PRIMARY PROJECT (Existing - for Auth, Firestore, Realtime DB)
 const firebaseConfig = {
-  apiKey: "AIzaSyCf2I7VLal5dp0XSpuLm1EtOpJQnZMtEX0",
-  authDomain: "skillx-platform-1b30d.firebaseapp.com",
-  projectId: "skillx-platform-1b30d",
-  storageBucket: "skillx-platform-1b30d.firebasestorage.app",
-  messagingSenderId: "642070584554",
-  appId: "1:642070584554:web:533afb72cd9d4f9e998b93"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
 // ✅ SECONDARY PROJECT (New - for File Storage/Uploads)
 const firebaseConfigStorage = {
-  apiKey: "AIzaSyDLTotQgAcjoaYObISrM6VCr0lu_MzWgSk",
-  authDomain: "skillx-app-96d24.firebaseapp.com",
-  projectId: "skillx-app-96d24",
-  storageBucket: "skillx-app-96d24.firebasestorage.app",
-  messagingSenderId: "141592113686",
-  appId: "1:141592113686:web:126916893682578880fb37"
+  apiKey: process.env.REACT_APP_FIREBASE_STORAGE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_STORAGE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_STORAGE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_STORAGE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_STORAGE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
