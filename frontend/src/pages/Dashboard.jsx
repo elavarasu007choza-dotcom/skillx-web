@@ -19,9 +19,6 @@ import { onValue, ref as rtdbRef } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import SessionReminder from "../components/SessionReminder";
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend
-} from "recharts";
 import { playSound } from "../utils/notificationSound";
 
 
@@ -994,20 +991,34 @@ export default function Dashboard() {
           <div className="graph">
             <h3>📈 Activity Overview</h3>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="sessions" stroke="#0ea5e9" strokeWidth={2} name="Sessions" />
-                <Line type="monotone" dataKey="calls" stroke="#22c55e" strokeWidth={2} name="Calls" />
-                <Line type="monotone" dataKey="connections" stroke="#8b5cf6" strokeWidth={2} name="Matches/Connections" />
-                <Line type="monotone" dataKey="requests" stroke="#f97316" strokeWidth={2} name="Request Activity" />
-                <Line type="monotone" dataKey="ratings" stroke="#f59e0b" strokeWidth={2} name="Ratings Earned" />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="activity-mini-chart">
+              {chartData.length === 0 ? (
+                <p>No activity data yet.</p>
+              ) : (
+                chartData.map((row, index) => {
+                  const dayTotal =
+                    (row.sessions || 0) +
+                    (row.calls || 0) +
+                    (row.connections || 0) +
+                    (row.requests || 0) +
+                    (row.ratings || 0);
+
+                  return (
+                    <div key={`${row.day}-${index}`} className="activity-row">
+                      <span className="activity-day">{row.day}</span>
+                      <div className="activity-bars">
+                        <span className="activity-pill sessions">S {row.sessions || 0}</span>
+                        <span className="activity-pill calls">C {row.calls || 0}</span>
+                        <span className="activity-pill connections">M {row.connections || 0}</span>
+                        <span className="activity-pill requests">R {row.requests || 0}</span>
+                        <span className="activity-pill ratings">★ {row.ratings || 0}</span>
+                      </div>
+                      <span className="activity-total">{dayTotal}</span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
 

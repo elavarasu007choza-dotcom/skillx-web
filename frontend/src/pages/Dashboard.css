@@ -297,6 +297,59 @@
   margin-bottom: 12px;
 }
 
+.dashboard-page .activity-mini-chart {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.dashboard-page .activity-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dashboard-page .activity-row:last-child {
+  border-bottom: none;
+}
+
+.dashboard-page .activity-day {
+  font-size: 12px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.dashboard-page .activity-bars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dashboard-page .activity-pill {
+  font-size: 11px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.dashboard-page .activity-pill.sessions { background: #e0f2fe; }
+.dashboard-page .activity-pill.calls { background: #dcfce7; }
+.dashboard-page .activity-pill.connections { background: #ede9fe; }
+.dashboard-page .activity-pill.requests { background: #ffedd5; }
+.dashboard-page .activity-pill.ratings { background: #fef9c3; }
+
+.dashboard-page .activity-total {
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
 /* Chat Button */
 .dashboard-page .chat-btn {
   position: fixed;
