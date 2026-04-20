@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   collection,
   doc,
@@ -61,6 +61,7 @@ export default function Messages() {
 
   const rtdb = getDatabase();
   const location = useLocation();
+  const routeChatId = useMemo(() => location.state?.chatId || "", [location.state]);
   const navigate = useNavigate();
   const { userId: routeUserId } = useParams();
 
@@ -180,28 +181,27 @@ export default function Messages() {
       list.sort((a, b) => b.updatedAt - a.updatedAt);
       setChats(list);
 
-      if (!selectedChat) {
+      if (list.length === 0) {
+        setSelectedChat(null);
+        return;
+      }
 
-        if (location.state?.chatId) {
-
-          const match = list.find((c) => c.id === location.state.chatId);
-
-          if (match) {
-            setSelectedChat(match);
-            return;
-          }
-
+      if (routeChatId) {
+        const routeMatch = list.find((c) => c.id === routeChatId);
+        if (routeMatch && selectedChat?.id !== routeMatch.id) {
+          setSelectedChat(routeMatch);
+          return;
         }
+      }
 
-        if (list.length > 0) {
-          setSelectedChat(list[0]);
-        }
-
+      const activeInList = selectedChat && list.some((c) => c.id === selectedChat.id);
+      if (!activeInList) {
+        setSelectedChat(list[0]);
       }
 
     });
 
-  }, [currentUser, presenceMap, usersMap, location, selectedChat]);
+  }, [currentUser, presenceMap, usersMap, routeChatId, selectedChat]);
 
   useEffect(() => {
     if (!currentUser || chats.length === 0) {
