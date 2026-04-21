@@ -8,7 +8,6 @@ const axios = require("axios");
 
 admin.initializeApp();
 const db = admin.firestore();
-const bucket = admin.storage().bucket();
 
 /* ==============================
 🔥 AUTO TAG GENERATION FUNCTION
@@ -49,6 +48,7 @@ exports.uploadChatFile = functions.https.onCall(async (data, context) => {
   }
 
   try {
+    const bucket = admin.storage().bucket();
     const fileSizeBytes = Math.ceil((fileBase64.length * 3) / 4);
     const maxSize = 10 * 1024 * 1024;
     if (fileSizeBytes > maxSize) {
@@ -112,5 +112,177 @@ exports.semanticAnalysis = onRequest({ secrets: [OPENAI_KEY] }, async (req, res)
     });
   } catch (error) {
     res.status(500).send("AI Error");
+  }
+});
+
+/* ==============================
+🤖 SECURE AI ACTION EXECUTOR
+============================== */
+const USER_ALLOWED_ACTIONS = new Set([
+  "send_request",
+  "send_message",
+]);
+
+const DEVELOPER_ONLY_ACTIONS = new Set([
+  "admin_delete_user",
+  "admin_set_role",
+]);
+
+const normalizeText = (value = "") => String(value || "").trim();
+
+const findTargetUser = async (actorUid, rawTarget) => {
+  const target = normalizeText(rawTarget).toLowerCase();
+  if (!target) return null;
+
+  const usersSnap = await db.collection("users").get();
+  let matched = null;
+
+  usersSnap.forEach((docSnap) => {
+    if (matched) return;
+    if (docSnap.id === actorUid) return;
+
+    const data = docSnap.data() || {};
+    const name = normalizeText(data.name).toLowerCase();
+    const email = normalizeText(data.email).toLowerCase();
+
+    if (name === target || name.includes(target) || email === target) {
+      matched = { id: docSnap.id, ...data };
+    }
+  });
+
+  return matched;
+};
+
+exports.aiAgentAction = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError("unauthenticated", "Login required");
+  }
+
+  const actorUid = context.auth.uid;
+  const action = normalizeText(data?.action);
+  const targetUserHint = normalizeText(data?.targetUser);
+  const message = normalizeText(data?.message);
+
+  if (!action) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing action");
+  }
+
+  // Website-only guard: reject anything outside allowlist.
+  if (!USER_ALLOWED_ACTIONS.has(action) && !DEVELOPER_ONLY_ACTIONS.has(action)) {
+    throw new functions.https.HttpsError("permission-denied", "Action is not allowed");
+  }
+
+  const actorSnap = await db.collection("users").doc(actorUid).get();
+  const actorData = actorSnap.data() || {};
+  const actorRole = normalizeText(actorData.role || "user").toLowerCase();
+
+  if (DEVELOPER_ONLY_ACTIONS.has(action) && actorRole !== "developer") {
+    throw new functions.https.HttpsError("permission-denied", "Developer role required");
+  }
+
+  const auditRef = db.collection("aiActionLogs").doc();
+  const baseAudit = {
+    action,
+    actorUid,
+    actorRole,
+    targetUserHint,
+    message,
+    source: "dashboard-chatbot",
+    status: "started",
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  await auditRef.set(baseAudit);
+
+  try {
+    const targetUser = await findTargetUser(actorUid, targetUserHint);
+    if (!targetUser) {
+      await auditRef.update({
+        status: "failed",
+        error: "target-user-not-found",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      throw new functions.https.HttpsError("not-found", "Target user not found");
+    }
+
+    if (action === "send_request") {
+      const skill = normalizeText(data?.skill || "general");
+
+      await db.collection("skillRequests").add({
+        senderId: actorUid,
+        receiverId: targetUser.id,
+        senderName: normalizeText(actorData.name || actorData.email || "User"),
+        senderPhoto: normalizeText(actorData.photoURL || ""),
+        skill,
+        message: message || "Let's connect for skill exchange",
+        status: "pending",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await db.collection("notifications").add({
+        userId: targetUser.id,
+        message: `📨 New skill request from ${normalizeText(actorData.name || "User")}`,
+        type: "request",
+        title: "AI Assisted Request",
+        metadata: { action, actorUid },
+        seen: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    if (action === "send_message") {
+      const chatId = [actorUid, targetUser.id].sort().join("_");
+
+      await db.collection("chats").doc(chatId).set(
+        {
+          users: [actorUid, targetUser.id],
+          lastMessage: message,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      await db.collection("chats").doc(chatId).collection("messages").add({
+        text: message,
+        senderId: actorUid,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        seenBy: [actorUid],
+      });
+
+      await db.collection("notifications").add({
+        userId: targetUser.id,
+        message: `💬 New message from ${normalizeText(actorData.name || "User")}`,
+        type: "message",
+        title: "AI Assisted Message",
+        metadata: { action, actorUid },
+        seen: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    await auditRef.update({
+      status: "success",
+      targetUid: targetUser.id,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return {
+      ok: true,
+      action,
+      target: {
+        uid: targetUser.id,
+        name: normalizeText(targetUser.name || targetUser.email || "User"),
+      },
+    };
+  } catch (error) {
+    if (!(error instanceof functions.https.HttpsError)) {
+      await auditRef.update({
+        status: "failed",
+        error: normalizeText(error?.message || "unknown-error"),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      throw new functions.https.HttpsError("internal", "Action execution failed");
+    }
+    throw error;
   }
 });

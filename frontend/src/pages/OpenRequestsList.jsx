@@ -165,19 +165,20 @@ function OpenRequestsList() {
       <div className="left">
         <h2>Open Requests</h2>
 
-        {requests.length === 0 && (
-          <p>No open requests available</p>
-        )}
+        <div className="open-requests-scroll">
+          {requests.length === 0 && (
+            <p>No open requests available</p>
+          )}
 
-        {requests.map((r) => {
-          
-          return (
-            <div
-              key={r.id}
+          {requests.map((r) => {
 
-              className="card request-entry clickable-card"
-              onClick={() => navigate(`/user/${r.createdBy}`)}
-            >
+            return (
+              <div
+                key={r.id}
+
+                className="card request-entry clickable-card"
+                onClick={() => navigate(`/user/${r.createdBy}`)}
+              >
 
 
               {/* 🔹 PROFILE */}
@@ -251,10 +252,11 @@ function OpenRequestsList() {
               ) : null
               }
 
-              <hr className="request-divider" />
-            </div>
-          );
-        })}
+                <hr className="request-divider" />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* 🔹 RIGHT SIDE – AI STATS + SUGGESTIONS */}
@@ -267,81 +269,85 @@ function OpenRequestsList() {
           </p>
         </div>
 
-        <div className="panel">
+        <div className="panel ai-suggestions-panel">
           <h3>🤖 AI Suggested Users</h3>
 
-          {suggestedUsers.length === 0 && (
-            <p>No suggestions yet</p>
-          )}
+          <div className="ai-suggestions-scroll">
+            {suggestedUsers.length === 0 && (
+              <p>No suggestions yet</p>
+            )}
 
-          {suggestedUsers.map((u) => (
-            <div
-              key={u.id}
-              className="suggest clickable-card"
-              onClick={() => navigate(`/user/${u.id}`)}
-            >
-              <img
-                className="request-owner-img"
-                src={
-                  u.photoURL ||
-                  `https://ui-avatars.com/api/?name=${u.name || "User"}`
-                }
-                alt={u.name || "User"}
-              />
-
-              <p><b>{u.name}</b></p>
-
-              <p>⭐ Rating: {u.rating || 0}</p>
-
-              <p>
-                🎯 Can teach:{" "}
-                {u.teachSkills?.map((s) => s.name).join(", ")}
-              </p>
-            </div>
-          ))}
-        </div>
-        <div className="panel">
-          <h3>🔥 Mutual Matches</h3>
-
-          {getMutualMatches()
-            .filter((r) => r.createdBy !== user?.uid)
-            .map((r) => (
+            {suggestedUsers.map((u) => (
               <div
-                key={r.id}
+                key={u.id}
                 className="suggest clickable-card"
-                onClick={() => navigate(`/user/${r.createdBy}`)}
+                onClick={() => navigate(`/user/${u.id}`)}
               >
-                <div className="request-owner-row">
-                  <img
-                    className="request-owner-img"
-                    src={
-                      r.photoURL ||
-                      `https://ui-avatars.com/api/?name=${r.name || "User"}`
-                    }
-                    alt={r.name || "User"}
-                  />
+                <img
+                  className="request-owner-img"
+                  src={
+                    u.photoURL ||
+                    `https://ui-avatars.com/api/?name=${u.name || "User"}`
+                  }
+                  alt={u.name || "User"}
+                />
 
-                  <p className="request-owner-name"><b>{r.name || "User"}</b></p>
-                </div>
+                <p><b>{u.name}</b></p>
 
-                <p><b>🤝 Skill Matched: {r.skill}</b></p>
-                <p>🔥 Mutual exchange is possible</p>
+                <p>⭐ Rating: {u.rating || 0}</p>
 
-                <button
-                  className="small-btn accept-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    acceptRequest(r);
-                  }}
-                >
-                  Accept
-                </button>
+                <p>
+                  🎯 Can teach:{" "}
+                  {u.teachSkills?.map((s) => s.name).join(", ")}
+                </p>
               </div>
             ))}
+          </div>
+        </div>
+        <div className="panel mutual-matches-panel">
+          <h3>🔥 Mutual Matches</h3>
 
-          {getMutualMatches().filter((r) => r.createdBy !== user?.uid).length === 0 && (
-            <p>No mutual matches yet</p>
-          )}
+          <div className="mutual-matches-scroll">
+            {getMutualMatches()
+              .filter((r) => r.createdBy !== user?.uid)
+              .map((r) => (
+                <div
+                  key={r.id}
+                  className="suggest clickable-card"
+                  onClick={() => navigate(`/user/${r.createdBy}`)}
+                >
+                  <div className="request-owner-row">
+                    <img
+                      className="request-owner-img"
+                      src={
+                        r.photoURL ||
+                        `https://ui-avatars.com/api/?name=${r.name || "User"}`
+                      }
+                      alt={r.name || "User"}
+                    />
+
+                    <p className="request-owner-name"><b>{r.name || "User"}</b></p>
+                  </div>
+
+                  <p><b>🤝 Skill Matched: {r.skill}</b></p>
+                  <p>🔥 Mutual exchange is possible</p>
+
+                  <button
+                    className="small-btn accept-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      acceptRequest(r);
+                    }}
+                  >
+                    Accept
+                  </button>
+                </div>
+              ))}
+
+            {getMutualMatches().filter((r) => r.createdBy !== user?.uid).length === 0 && (
+              <p>No mutual matches yet</p>
+            )}
+          </div>
         </div>
 
         <div className="panel info-panel">

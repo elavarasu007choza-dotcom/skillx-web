@@ -859,6 +859,35 @@ opacity: 1;
     border-bottom: none;
   }
 
+  .chat-item {
+    min-width: auto;
+    width: auto;
+    margin-right: 6px;
+    padding: 4px;
+    border-radius: 999px;
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .chat-item:hover,
+  .chat-item.active {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(125, 211, 252, 0.35);
+    transform: none;
+  }
+
+  .chat-item .chat-meta {
+    display: none;
+  }
+
+  .chat-item .avatar-wrapper,
+  .chat-item .avatar,
+  .chat-item .avatar-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+  }
+
   .chat-header strong {
     font-size: 15px;
   }

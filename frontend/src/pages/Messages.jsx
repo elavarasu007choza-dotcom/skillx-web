@@ -370,7 +370,8 @@ export default function Messages() {
 
           deleteDoc(doc(db, "calls", callDoc.id));
 
-          navigate(`/video-call/${data.roomID}?User=${data.receiver}&name=${data.receiverName}`);
+          const resolvedType = String(data.type || "Video").toLowerCase();
+          navigate(`/video-call/${data.roomID}?User=${data.receiver}&name=${data.receiverName}&type=${resolvedType}`);
 
         }
 
@@ -392,10 +393,12 @@ export default function Messages() {
 
           if (selectedChat) {
             addDoc(collection(db, "chats", selectedChat.id, "messages"), {
-              text: `📞 Missed Call`,
+              text: `📞 Missed ${data.type} Call`,
               senderId: currentUser.uid,
               createdAt: serverTimestamp(),
-              seenBy: [currentUser.uid]
+              seenBy: [currentUser.uid],
+              callType: data.type,
+              callStatus: "missed"
             });
           }
 
@@ -713,7 +716,7 @@ export default function Messages() {
                     {m.callStatus === "missed" ? (
                       <>
                         <span>
-                          {m.senderId === currentUser.uid ? "📤 Missed Call" : "📥 Missed Call"}
+                          {m.senderId === currentUser.uid ? "📤 Missed" : "📥 Missed"} {m.callType || "Video"} Call
                         </span>
 
                         <button

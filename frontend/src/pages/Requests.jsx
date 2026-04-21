@@ -122,92 +122,98 @@ export default function Requests() {
       <div className="left">
         <h2>📥 Connection Requests</h2>
 
-        {requests.length === 0 && <p>No requests</p>}
+        <div className="requests-list-scroll">
 
-        {requests.map((r) => {
-          const profile = usersMap[r.senderId] || {};
-          const senderName = profile.name || r.senderName || "User";
-          const senderPhoto =
-            profile.photoURL ||
-            r.senderPhoto ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`;
+          {requests.length === 0 && <p>No requests</p>}
 
-          return (
-            <div
-              key={r.id}
-              className="request-card"
-              onClick={() => navigate(`/user/${r.senderId}`)}
-            >
-              <div className="request-user">
-                <img src={senderPhoto} alt={senderName} />
+          {requests.map((r) => {
+            const profile = usersMap[r.senderId] || {};
+            const senderName = profile.name || r.senderName || "User";
+            const senderPhoto =
+              profile.photoURL ||
+              r.senderPhoto ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`;
 
-                <div>
-                  <h4>{senderName}</h4>
-                  <p>🤝 Connection request</p>
+            return (
+              <div
+                key={r.id}
+                className="request-card"
+                onClick={() => navigate(`/user/${r.senderId}`)}
+              >
+                <div className="request-user">
+                  <img src={senderPhoto} alt={senderName} />
+
+                  <div>
+                    <h4>{senderName}</h4>
+                    <p>🤝 Connection request</p>
+                  </div>
+                </div>
+
+                <div
+                  className="request-actions"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button onClick={() => acceptRequest(r.id, r.senderId)}>
+                    ✅ Accept
+                  </button>
+                  <button onClick={() => rejectRequest(r.id)}>
+                    ❌ Reject
+                  </button>
                 </div>
               </div>
-
-              <div
-                className="request-actions"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button onClick={() => acceptRequest(r.id, r.senderId)}>
-                  ✅ Accept
-                </button>
-                <button onClick={() => rejectRequest(r.id)}>
-                  ❌ Reject
-                </button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* 🔥 MIDDLE SIDE → Skill Requests (YOU WANT THIS) */}
       <div className="middle">
         <h2>📘 Incoming Skill Requests</h2>
 
-        {skillRequests.length === 0 && <p>No skill requests</p>}
+        <div className="requests-list-scroll">
 
-        {skillRequests.map((r) => {
-          const profile = usersMap[r.senderId] || {};
-          const senderName = profile.name || r.senderName || "User";
-          const senderPhoto =
-            profile.photoURL ||
-            r.senderPhoto ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`;
+          {skillRequests.length === 0 && <p>No skill requests</p>}
 
-          return (
-            <div
-              key={r.id}
-              className="request-card"
-              onClick={() => navigate(`/user/${r.senderId}`)}
-            >
-              <div className="request-user">
-                <img src={senderPhoto} alt={senderName} />
+          {skillRequests.map((r) => {
+            const profile = usersMap[r.senderId] || {};
+            const senderName = profile.name || r.senderName || "User";
+            const senderPhoto =
+              profile.photoURL ||
+              r.senderPhoto ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`;
 
-                <div>
-                  <h4>{senderName}</h4>
-                  <p><b>Skill:</b> {r.skill}</p>
-                  <p><b>Message:</b> {r.message}</p>
+            return (
+              <div
+                key={r.id}
+                className="request-card"
+                onClick={() => navigate(`/user/${r.senderId}`)}
+              >
+                <div className="request-user">
+                  <img src={senderPhoto} alt={senderName} />
+
+                  <div>
+                    <h4>{senderName}</h4>
+                    <p><b>Skill:</b> {r.skill}</p>
+                    <p><b>Message:</b> {r.message}</p>
+                  </div>
+                </div>
+
+                <div
+                  className="request-actions"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button onClick={() => acceptSkill(r.id)}>
+                    ✅ Accept
+                  </button>
+
+                  <button onClick={() => rejectSkill(r.id)}>
+                    ❌ Reject
+                  </button>
                 </div>
               </div>
-
-              <div
-                className="request-actions"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button onClick={() => acceptSkill(r.id)}>
-                  ✅ Accept
-                </button>
-
-                <button onClick={() => rejectSkill(r.id)}>
-                  ❌ Reject
-                </button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       </div>

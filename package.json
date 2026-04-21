@@ -6,6 +6,7 @@
     "frontend",
     "functions"
   ],
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "firebase-admin": "^13.8.0"
+  }
 }

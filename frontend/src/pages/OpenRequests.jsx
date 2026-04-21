@@ -233,51 +233,53 @@ const navigate = useNavigate();
         <div className="card middle-panel">
           <h2>Community Requests</h2>
 
-          {allOpenRequests.length === 0 && (
-            <p>No open requests available</p>
-          )}
+          <div className="community-requests-scroll">
+            {allOpenRequests.length === 0 && (
+              <p>No open requests available</p>
+            )}
 
-          {allOpenRequests.map((r) => (
-            <div key={r.id} className="request-card clickable-card"
-              onClick={() => navigate(`/user/${r.createdBy}`)}
-            >
+            {allOpenRequests.map((r) => (
+              <div key={r.id} className="request-card clickable-card"
+                onClick={() => navigate(`/user/${r.createdBy}`)}
+              >
 
-              <div className="request-owner-row">
-                <img
-                  className="request-owner-img"
-                  src={r.photoURL || `https://ui-avatars.com/api/?name=${r.name}`
-                  }
-                  alt={r.name || "User"}
-                />
-                <p className="request-owner-name"><b>{r.name || "User"}</b></p>
+                <div className="request-owner-row">
+                  <img
+                    className="request-owner-img"
+                    src={r.photoURL || `https://ui-avatars.com/api/?name=${r.name}`
+                    }
+                    alt={r.name || "User"}
+                  />
+                  <p className="request-owner-name"><b>{r.name || "User"}</b></p>
+                </div>
+
+                <p><b>📘 Skill Need: {r.skill}</b></p>
+                <p>{r.description}</p>
+                {r.mySkills && r.mySkills.length > 0 && (
+                  <p>🎯 I can teach: {r.mySkills.join(", ")}</p>
+                )}
+
+                {r.createdBy !== user?.uid && (
+                  <button
+                    className="small-btn accept-btn"
+                    onClick={() => acceptRequest(r)}
+                  >
+                    Accept
+                  </button>
+                )}
+
+                {r.createdBy === user?.uid && (
+                  <button
+                    className="small-btn close-btn"
+                    onClick={() => deleteRequest(r.id)}
+                  >
+                    Delete
+                  </button>
+                )}
+
               </div>
-
-              <p><b>📘 Skill Need: {r.skill}</b></p>
-              <p>{r.description}</p>
-              {r.mySkills && r.mySkills.length > 0 && (
-                <p>🎯 I can teach: {r.mySkills.join(", ")}</p>
-              )}
-
-              {r.createdBy !== user?.uid && (
-                <button
-                  className="small-btn accept-btn"
-                  onClick={() => acceptRequest(r)}
-                >
-                  Accept
-                </button>
-              )}
-
-              {r.createdBy === user?.uid && (
-                <button
-                  className="small-btn close-btn"
-                  onClick={() => deleteRequest(r.id)}
-                >
-                  Delete
-                </button>
-              )}
-
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
 
@@ -287,39 +289,41 @@ const navigate = useNavigate();
         <div className="card right-panel">
           <h2>My Requests</h2>
 
-          {myRequests.length === 0 && (
-            <p>No open requests posted yet</p>
-          )}
+          <div className="my-requests-scroll">
+            {myRequests.length === 0 && (
+              <p>No open requests posted yet</p>
+            )}
 
-          {myRequests.map((r) => (
-            <div key={r.id} className="request-card my-request-card">
-              <p><b>{r.skill}</b></p>
+            {myRequests.map((r) => (
+              <div key={r.id} className="request-card my-request-card">
+                <p><b>{r.skill}</b></p>
 
-              <span className={`status ${r.status}`}>
-                {r.status}
-              </span>
+                <span className={`status ${r.status}`}>
+                  {r.status}
+                </span>
 
-              <div className="my-request-actions">
-                {r.status === "open" && (
+                <div className="my-request-actions">
+                  {r.status === "open" && (
+                    <button
+                      className="icon-btn close-icon"
+                      onClick={() => closeRequest(r.id)}
+                      title="Close Request"
+                    >
+                      ❌
+                    </button>
+                  )}
                   <button
-                    className="icon-btn close-icon"
-                    onClick={() => closeRequest(r.id)}
-                    title="Close Request"
+                    className="icon-btn delete-icon"
+                    onClick={() => deleteRequest(r.id)}
+                    title="Delete Request"
                   >
-                    ❌
+                    🗑️
                   </button>
-                )}
-                <button
-                  className="icon-btn delete-icon"
-                  onClick={() => deleteRequest(r.id)}
-                  title="Delete Request"
-                >
-                  🗑️
-                </button>
-              </div>
+                </div>
 
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

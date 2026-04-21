@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { addDoc, collection, query, where, getDocs, doc, updateDoc, increment } from "firebase/firestore";
 import { db, auth } from "../firebase";
@@ -27,6 +27,10 @@ const VideoCall = () => {
   const [showEditor, setShowEditor] = useState(false);
   const [isEditorMinimized, setIsEditorMinimized] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const callType = useMemo(() => {
+    const typeParam = new URLSearchParams(window.location.search).get("type");
+    return typeParam === "audio" ? "audio" : "video";
+  }, []);
 
   useEffect(() => {
     setIsReady(true);
@@ -52,7 +56,6 @@ const VideoCall = () => {
     const params = new URLSearchParams(window.location.search);
     const remoteUserId = params.get("User");
     const remoteUserName = params.get("name");
-
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
       719135717,
       "3afe9c9f03987b9da0999aeefba1b151",
@@ -97,7 +100,7 @@ const VideoCall = () => {
             roomID: roomID,
             status: "completed",
             duration: duration,
-            type: "video",
+            type: callType,
             createdAt: new Date(),
           });
 
@@ -128,7 +131,7 @@ const VideoCall = () => {
               roomID: roomID,
               status: "completed",
               duration: duration,
-              type: "video",
+              type: callType,
               createdAt: new Date(),
             });
             navigate("/messages", { replace: true });
@@ -146,7 +149,7 @@ const VideoCall = () => {
         zpRef.current = null;
       }
     };
-  }, [isReady, navigate]);
+  }, [isReady, navigate, callType]);
 
   
 
@@ -177,7 +180,7 @@ const VideoCall = () => {
           participants: [auth.currentUser?.uid],
           status: "abandoned",
           duration: duration,
-          type: "video",
+          type: callType,
           createdAt: new Date(),
         });
       } catch (err) {
@@ -189,7 +192,7 @@ const VideoCall = () => {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, []);
+  }, [callType]);
 
   return (
     <>

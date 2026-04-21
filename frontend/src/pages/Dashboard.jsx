@@ -24,6 +24,7 @@ import { playSound } from "../utils/notificationSound";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const BOT_WELCOME = "Hi! I am your SkillX AI assistant. Ask me about requests, matches, sessions, and next steps.";
   const [callHistory, setCallHistory] = useState([]);
   const [userMap, setUserMap] = useState({});
   const [userStatusMap, setUserStatusMap] = useState({});
@@ -226,9 +227,22 @@ export default function Dashboard() {
   const [mostActiveUsers, setMostActiveUsers] = useState([]);
   const [totalUsersCount, setTotalUsersCount] = useState(0);
   const [liveUsersCount, setLiveUsersCount] = useState(0);
+  const [allUsers, setAllUsers] = useState([]);
   const [dashboardToast, setDashboardToast] = useState("");
+  const [isAiBotOpen, setIsAiBotOpen] = useState(false);
+  const [botInput, setBotInput] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
+  const [botMessages, setBotMessages] = useState([
+    { id: 1, role: "bot", text: BOT_WELCOME }
+  ]);
+  const botScrollRef = useRef(null);
   const toastTimerRef = useRef(null);
   const notifReadyRef = useRef(false);
+
+  useEffect(() => {
+    if (!isAiBotOpen || !botScrollRef.current) return;
+    botScrollRef.current.scrollTop = botScrollRef.current.scrollHeight;
+  }, [botMessages, isAiBotOpen]);
   /* ---------------- NOTIFICATION COUNT (REALTIME) ---------------- */
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -293,6 +307,7 @@ export default function Dashboard() {
     const unsub = onSnapshot(collection(db, "users"), (snap) => {
       const map = {};
       const statusMap = {};
+      const users = [];
       setTotalUsersCount(snap.size);
       snap.forEach(doc => {
         const data = doc.data();
@@ -301,9 +316,11 @@ export default function Dashboard() {
           online: data.online,
           lastSeen: data.lastSeen,
         };
+        users.push({ id: doc.id, ...data });
       });
       setUserMap(map);
       setUserStatusMap(statusMap);
+      setAllUsers(users);
     });
 
     return () => unsub();
@@ -778,6 +795,208 @@ export default function Dashboard() {
     navigate("/send-request");
   };
 
+  const getAiReply = (message) => {
+    const text = message.toLowerCase();
+
+    if (text.includes("request") || text.includes("incoming")) {
+      return `You currently have ${stats.incoming} incoming request${stats.incoming === 1 ? "" : "s"}. Open Incoming Requests to accept or reject quickly.`;
+    }
+
+    if (text.includes("match") || text.includes("connect")) {
+      if (stats.matches > 0) {
+        return `Great news! You have ${stats.matches} active match${stats.matches === 1 ? "" : "es"}${topMatchUser ? ` and a strong match with ${topMatchUser}` : ""}. Try Open Requests to connect now.`;
+      }
+      return "No active matches yet. Post an open request and add clear teach/learn skills to improve matching.";
+    }
+
+    if (text.includes("session") || text.includes("schedule")) {
+      return `You have ${scheduledCount} upcoming session${scheduledCount === 1 ? "" : "s"}. Use My Sessions from top bar to track and prepare.`;
+    }
+
+    if (text.includes("skill")) {
+      if (mySkills.length === 0) {
+        return "You have not added skills yet. Add 2-3 teach skills in Profile to get better recommendations and requests.";
+      }
+      return `You currently list ${mySkills.length} skill${mySkills.length === 1 ? "" : "s"}. Keep them updated to improve visibility.`;
+    }
+
+    if (text.includes("notification") || text.includes("alert")) {
+      return `You have ${notifCount} unread notification${notifCount === 1 ? "" : "s"}. Tap the bell icon in the top bar to view them.`;
+    }
+
+    if (text.includes("next") || text.includes("plan") || text.includes("what should i do")) {
+      return suggestions.length > 0
+        ? `Suggested next steps: ${suggestions.slice(0, 3).join(" | ")}`
+        : "Start by posting an open request, then send at least one skill request to build momentum.";
+    }
+
+    return "I can help with requests, matches, sessions, skills, and notifications. Try asking: 'How many incoming requests?'";
+  };
+
+  const addBotOnlyMessage = (text) => {
+    setBotMessages((prev) => [
+      ...prev,
+      { id: Date.now() + Math.floor(Math.random() * 1000), role: "bot", text }
+    ]);
+  };
+
+  const resolveUserByName = (rawName) => {
+    const target = rawName.trim().toLowerCase();
+    if (!target) return null;
+
+    return allUsers.find((u) => {
+      if (u.id === auth.currentUser?.uid) return false;
+      const name = (u.name || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      return name === target || name.includes(target) || email === target;
+    }) || null;
+  };
+
+  const parseActionCommand = (message) => {
+    const text = message.trim();
+
+    const requestRegex = /(?:send|create)\s+(?:a\s+)?request\s+(?:to|for)\s+([^:]+?)(?:\s*:\s*(.+))?$/i;
+    const requestMatch = text.match(requestRegex);
+    if (requestMatch) {
+      const userName = requestMatch[1]?.trim();
+      const note = requestMatch[2]?.trim() || "Let's connect for skill exchange";
+      return { type: "send_request", userName, message: note };
+    }
+
+    const messageRegex = /(?:send\s+)?message\s+(?:to|for)\s+([^:]+?)\s*:\s*(.+)$/i;
+    const messageMatch = text.match(messageRegex);
+    if (messageMatch) {
+      const userName = messageMatch[1]?.trim();
+      const body = messageMatch[2]?.trim();
+      return { type: "send_message", userName, message: body };
+    }
+
+    return null;
+  };
+
+  const executePendingAction = async () => {
+    if (!pendingAction || !auth.currentUser) {
+      addBotOnlyMessage("No pending action found.");
+      setPendingAction(null);
+      return;
+    }
+
+    const targetUser = resolveUserByName(pendingAction.userName);
+    if (!targetUser) {
+      addBotOnlyMessage(`I could not find user '${pendingAction.userName}'. Please give exact name or email.`);
+      setPendingAction(null);
+      return;
+    }
+
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+
+      const runAiAction = async (payload) => {
+        const response = await fetch("/api/ai-agent-action", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.error || "Action failed");
+        }
+
+        return data;
+      };
+
+      if (pendingAction.type === "send_request") {
+        await runAiAction({
+          action: "send_request",
+          targetUser: pendingAction.userName,
+          skill: mySkills?.[0]?.name || "general",
+          message: pendingAction.message,
+        });
+
+        addBotOnlyMessage(`Done. Request sent to ${targetUser.name || targetUser.email || "user"}.`);
+      }
+
+      if (pendingAction.type === "send_message") {
+        await runAiAction({
+          action: "send_message",
+          targetUser: pendingAction.userName,
+          message: pendingAction.message,
+        });
+
+        addBotOnlyMessage(`Done. Message sent to ${targetUser.name || targetUser.email || "user"}.`);
+      }
+    } catch (err) {
+      console.error("AI action execution failed", err);
+      addBotOnlyMessage("Action failed due to a temporary issue. Please try again.");
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const sendBotMessage = (message) => {
+    const trimmed = message.trim();
+    if (!trimmed) return;
+
+    const normalized = trimmed.toLowerCase();
+
+    if (pendingAction && (normalized === "confirm" || normalized === "yes")) {
+      setBotMessages((prev) => [...prev, { id: Date.now(), role: "user", text: trimmed }]);
+      executePendingAction();
+      return;
+    }
+
+    if (pendingAction && (normalized === "cancel" || normalized === "no")) {
+      setBotMessages((prev) => [
+        ...prev,
+        { id: Date.now(), role: "user", text: trimmed },
+        { id: Date.now() + 1, role: "bot", text: "Action cancelled." }
+      ]);
+      setPendingAction(null);
+      return;
+    }
+
+    const parsed = parseActionCommand(trimmed);
+    if (parsed?.type) {
+      const targetUser = resolveUserByName(parsed.userName);
+      if (!targetUser) {
+        setBotMessages((prev) => [
+          ...prev,
+          { id: Date.now(), role: "user", text: trimmed },
+          { id: Date.now() + 1, role: "bot", text: `I could not find '${parsed.userName}'. Try exact user name or email.` }
+        ]);
+        return;
+      }
+
+      setPendingAction(parsed);
+      const preview = parsed.type === "send_request"
+        ? `I am ready to send a request to ${targetUser.name || targetUser.email}. Type 'confirm' to proceed or 'cancel'.`
+        : `I am ready to send this message to ${targetUser.name || targetUser.email}. Type 'confirm' to proceed or 'cancel'.`;
+
+      setBotMessages((prev) => [
+        ...prev,
+        { id: Date.now(), role: "user", text: trimmed },
+        { id: Date.now() + 1, role: "bot", text: preview }
+      ]);
+      return;
+    }
+
+    setBotMessages((prev) => [
+      ...prev,
+      { id: Date.now(), role: "user", text: trimmed },
+      { id: Date.now() + 1, role: "bot", text: getAiReply(trimmed) }
+    ]);
+  };
+
+  const handleBotSubmit = () => {
+    if (!botInput.trim()) return;
+    sendBotMessage(botInput);
+    setBotInput("");
+  };
+
   return (
     <div className="dashboard-page">
       
@@ -795,6 +1014,13 @@ export default function Dashboard() {
             <button className="notif-btn">🔔</button>
             {notifCount > 0 && <span className="notif-badge">{notifCount}</span>}
           </div>
+          <button
+            className="notif-btn"
+            title="Notification Settings"
+            onClick={() => navigate("/notification-settings")}
+          >
+            ⚙️
+          </button>
           <button onClick={() => navigate("/my-sessions")}>
             📅 My Sessions {scheduledCount > 0 && <span className="scheduled-badge">{scheduledCount}</span>}
           </button>
@@ -1022,8 +1248,68 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* FLOAT CHAT */}
-        <div className="chat-btn" onClick={() => navigate("/messages")}>💬</div>
+        {/* FLOATING ACTIONS */}
+        <div className="floating-actions">
+          <button
+            type="button"
+            className="ai-chat-btn"
+            onClick={() => setIsAiBotOpen((prev) => !prev)}
+            title="AI Assistant"
+          >
+            🤖
+          </button>
+
+          <button
+            type="button"
+            className="chat-btn"
+            onClick={() => navigate("/messages")}
+            title="Messages"
+          >
+            💬
+          </button>
+        </div>
+
+        {isAiBotOpen && (
+          <div className="ai-chatbot">
+            <div className="ai-chatbot-head">
+              <strong>SkillX AI</strong>
+              <button
+                type="button"
+                className="ai-chatbot-close"
+                onClick={() => setIsAiBotOpen(false)}
+                aria-label="Close AI assistant"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="ai-chatbot-body" ref={botScrollRef}>
+              {botMessages.map((msg) => (
+                <div key={msg.id} className={`ai-msg ${msg.role === "user" ? "user" : "bot"}`}>
+                  {msg.text}
+                </div>
+              ))}
+            </div>
+
+            <div className="ai-chatbot-quick">
+              <button type="button" onClick={() => sendBotMessage("How many incoming requests?")}>Requests</button>
+              <button type="button" onClick={() => sendBotMessage("Any match updates?")}>Matches</button>
+              <button type="button" onClick={() => sendBotMessage("send request to vaishnavi: Can we connect to practice Java?")}>Auto Request</button>
+              <button type="button" onClick={() => sendBotMessage("message to vaishnavi: Hi, shall we schedule a quick session?")}>Auto Message</button>
+              <button type="button" onClick={() => sendBotMessage("What should I do next?")}>Next Step</button>
+            </div>
+
+            <div className="ai-chatbot-input">
+              <input
+                value={botInput}
+                onChange={(e) => setBotInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleBotSubmit()}
+                placeholder="Ask about your dashboard..."
+              />
+              <button type="button" onClick={handleBotSubmit}>Send</button>
+            </div>
+          </div>
+        )}
 </div>
 
       </div>
