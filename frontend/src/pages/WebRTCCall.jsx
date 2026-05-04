@@ -595,7 +595,7 @@ export default function WebRTCCall() {
       </header>
 
       <div className="webrtc-stage">
-        {role === "caller" && !remoteVideoReady && !hasEndedRef.current && (
+        {role === "caller" && !remoteVideoReady && !hasEndedRef.current && status === "Connecting..." && (
           <div className="webrtc-calling-popup">
             <div className="webrtc-calling-card">
               <p className="webrtc-calling-title">Calling</p>
