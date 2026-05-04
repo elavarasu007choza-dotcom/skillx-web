@@ -369,7 +369,7 @@ export default function WebRTCCall() {
       hasStartedRef.current = false;
       startInFlightRef.current = false;
     };
-  }, [roomID, callType, role]);
+  }, [callType, navigate, recordCallHistory, role, roomID]);
 
   const toggleMic = () => {
     localStream.current?.getAudioTracks().forEach((t) => {
@@ -505,12 +505,12 @@ export default function WebRTCCall() {
     }
   }, [buildCallPayload]);
 
-  const closeStreams = () => {
+  const closeStreams = useCallback(() => {
     isClosingRef.current = true;
     localStream.current?.getTracks().forEach((t) => t.stop());
     screenStream.current?.getTracks().forEach((t) => t.stop());
     pc.current?.close();
-  };
+  }, []);
 
   const handleLeave = async () => {
     if (hasEndedRef.current) return;
@@ -577,7 +577,7 @@ export default function WebRTCCall() {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [recordCallHistory]);
+  }, [closeStreams, recordCallHistory, roomID]);
 
   return (
     <div className="webrtc-page">
