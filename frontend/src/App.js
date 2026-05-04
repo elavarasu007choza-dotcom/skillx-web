@@ -7,6 +7,7 @@ import Signup from "./pages/Signup";
 import VideoCall from "./components/VideoCall";
 import IncomingCallNotifier from "./components/IncomingCallNotifier";
 import SessionReminder from "./components/SessionReminder";
+// eslint-disable-next-line no-unused-vars
 import WebRTCCall from "./pages/WebRTCCall";
 import CallHistory from "./pages/CallHistory";
 import { initNotificationSounds } from "./utils/notificationSound";
