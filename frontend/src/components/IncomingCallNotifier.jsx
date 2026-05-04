@@ -69,7 +69,8 @@ callSoundPlayed.current = false;
 await updateDoc(doc(db, "calls", incomingCall.docId), {
 status: "accepted",
 });
-navigate(`/video-call/${incomingCall.roomID}?User=${incomingCall.caller}&name=${incomingCall.callerName}`);
+const resolvedType = String(incomingCall.type || "video").toLowerCase();
+navigate(`/webrtc/${incomingCall.roomID}?role=callee&User=${incomingCall.caller}&name=${incomingCall.callerName}&type=${resolvedType}`);
 setIncomingCall(null);
 };
 

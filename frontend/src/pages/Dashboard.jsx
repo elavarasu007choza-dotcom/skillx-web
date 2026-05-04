@@ -510,14 +510,18 @@ export default function Dashboard() {
         setActivities([...activitiesData].sort((a, b) => (b.time?.toDate?.() || 0) - (a.time?.toDate?.() || 0)).slice(0, 5));
       });
 
-      unsub3 = onSnapshot(query(collection(db, "reviews"), where("toUser", "==", uid), orderBy("createdAt", "desc")), (snap) => {
-        snap.docs.slice(0, 2).forEach(d => {
-          const data = d.data();
+      unsub3 = onSnapshot(query(collection(db, "reviews"), where("toUser", "==", uid)), (snap) => {
+        const sorted = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0))
+          .slice(0, 2);
+
+        sorted.forEach((item) => {
           activitiesData.push({
-            id: d.id,
+            id: item.id,
             type: "rating",
-            message: `You got ${data.rating} ⭐ rating from ${data.fromName || "someone"}`,
-            time: data.createdAt
+            message: `You got ${item.rating} ⭐ rating from ${item.fromName || "someone"}`,
+            time: item.createdAt
           });
         });
         setActivities([...activitiesData].sort((a, b) => (b.time?.toDate?.() || 0) - (a.time?.toDate?.() || 0)).slice(0, 5));

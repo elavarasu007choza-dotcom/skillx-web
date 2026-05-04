@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { auth, db } from "../firebase";
 import { collection, doc, onSnapshot, query, setDoc, where } from "firebase/firestore";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
-import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
+import { isProfileIncomplete } from "../utils/profileCompletion";
 
 const getEnv = (key, fallback) => {
   const value = process.env[key];
@@ -43,7 +43,8 @@ const uploadToCloudinary = async (file) => {
 };
 
 export default function Profile() {
-  const navigate =useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
   const handleShareProfile = async () => {
     const profileUid = uid || auth.currentUser?.uid;
     if (!profileUid) return;
@@ -96,6 +97,12 @@ export default function Profile() {
   const [toast, setToast] = useState("");
 
   const isOwnProfile = !uid || uid === auth.currentUser?.uid;
+
+  useEffect(() => {
+    if (location.state?.startEdit && isOwnProfile) {
+      setEditMode(true);
+    }
+  }, [location.state, isOwnProfile]);
 
   const [profile, setProfile] = useState({
     name: "",
@@ -417,14 +424,18 @@ export default function Profile() {
   const handleSave = async () => {
     if (!auth.currentUser) return;
 
+    const normalizedProfile = {
+      ...profile,
+      teachSkills: formatSkills(profile.teachSkills),
+      learnSkills: formatSkills(profile.learnSkills),
+    };
+    const profileCompleted = !isProfileIncomplete(normalizedProfile);
+
     await setDoc(
       doc(db, "users", auth.currentUser.uid),
       {
-        ...profile,
-
-        /* 🔥 STORE AS ARRAY */
-        teachSkills: formatSkills(profile.teachSkills),
-        learnSkills: formatSkills(profile.learnSkills),
+        ...normalizedProfile,
+        profileCompleted,
 
         uid: auth.currentUser.uid,
         email: auth.currentUser.email,

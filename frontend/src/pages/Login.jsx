@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
@@ -37,6 +37,25 @@ function Login() {
     }, 3200);
   };
 
+  const resolvePostLoginTarget = useCallback(async (user) => {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        uid: user.uid,
+        name: user.displayName || "",
+        email: user.email || "",
+        photoURL: user.photoURL || null,
+        createdAt: serverTimestamp(),
+      });
+
+      return { path: "/profile", state: { startEdit: true } };
+    }
+
+    return { path: redirectPath };
+  }, [redirectPath]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -61,7 +80,8 @@ function Login() {
           });
         }
 
-        navigate(redirectPath, { replace: true });
+        const target = await resolvePostLoginTarget(result.user);
+        navigate(target.path, { replace: true, state: target.state });
       } catch (err) {
         if (!isMounted) {
           return;
@@ -82,7 +102,7 @@ function Login() {
         clearTimeout(popupTimerRef.current);
       }
     };
-  }, [navigate, redirectPath]);
+  }, [navigate, resolvePostLoginTarget]);
 
   // 🔐 Email Login
   const handleLogin = async (e) => {
@@ -95,8 +115,9 @@ function Login() {
 
     try {
       setLoading(true);
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate(redirectPath, { replace: true });
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const target = await resolvePostLoginTarget(result.user);
+      navigate(target.path, { replace: true, state: target.state });
     } catch (err) {
       showPopup("Invalid email or password");
     } finally {
@@ -125,7 +146,8 @@ function Login() {
         });
       }
 
-      navigate(redirectPath, { replace: true });
+      const target = await resolvePostLoginTarget(result.user);
+      navigate(target.path, { replace: true, state: target.state });
     } catch (err) {
       console.error("Google login error:", err);
 

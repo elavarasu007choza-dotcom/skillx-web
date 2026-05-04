@@ -57,8 +57,8 @@ const VideoCall = () => {
     const remoteUserId = params.get("User");
     const remoteUserName = params.get("name");
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
-      719135717,
-      "3afe9c9f03987b9da0999aeefba1b151",
+      235800254,
+      "5af9fc6a5e7e6b0c8dcf2ec245f75698",
       roomID,
       userID,
       userName

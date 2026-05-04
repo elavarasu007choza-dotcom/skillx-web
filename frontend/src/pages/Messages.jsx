@@ -38,6 +38,7 @@ export default function Messages() {
   const [uploadedFile, setUploadedFile] = useState(null);
 
   const [handledCallId, setHandledCallId] = useState(null);
+  const [outgoingCall, setOutgoingCall] = useState(null);
 
   const typingTimeout = useRef(null);
   const lastMsgCount = useRef(0);
@@ -314,7 +315,7 @@ export default function Messages() {
     const callerName = usersMap[currentUser?.uid]?.name || currentUser?.email || "User";
     const receiverId = selectedChat.otherUid || selectedChat?.uid;
 
-    await addDoc(collection(db, "calls"), {
+    const callDoc = await addDoc(collection(db, "calls"), {
       caller: currentUser.uid,
       callerName: callerName,
 
@@ -325,6 +326,14 @@ export default function Messages() {
       type,
       status: "ringing",
       createdAt: serverTimestamp(),
+    });
+
+    setOutgoingCall({
+      id: callDoc.id,
+      roomID,
+      type,
+      receiverId,
+      receiverName: selectedChat.otherName || selectedChat?.name || "User",
     });
 
     await sendNotification(
@@ -364,14 +373,31 @@ export default function Messages() {
 
         const data = callDoc.data();
 
+        if (data.status === "ringing") {
+          setOutgoingCall((prev) =>
+            prev && prev.id === callDoc.id
+              ? { ...prev, receiverName: data.receiverName || prev.receiverName }
+              : prev || {
+                  id: callDoc.id,
+                  roomID: data.roomID,
+                  type: data.type,
+                  receiverId: data.receiver,
+                  receiverName: data.receiverName || "User",
+                }
+          );
+        }
+
         if (data.status === "accepted") {
 
           setHandledCallId(callDoc.id);
+          setOutgoingCall(null);
 
           deleteDoc(doc(db, "calls", callDoc.id));
 
           const resolvedType = String(data.type || "Video").toLowerCase();
-          navigate(`/video-call/${data.roomID}?User=${data.receiver}&name=${data.receiverName}&type=${resolvedType}`);
+          navigate(
+            `/webrtc/${data.roomID}?role=caller&User=${data.receiver}&name=${data.receiverName}&type=${resolvedType}`
+          );
 
         }
 
@@ -388,6 +414,7 @@ export default function Messages() {
           });
 
           setHandledCallId(callDoc.id);
+          setOutgoingCall(null);
 
           deleteDoc(doc(db, "calls", callDoc.id));
 
@@ -404,6 +431,11 @@ export default function Messages() {
 
         }
 
+        if (data.status === "cancelled") {
+          setOutgoingCall(null);
+          deleteDoc(doc(db, "calls", callDoc.id));
+        }
+
       });
 
     });
@@ -411,6 +443,18 @@ export default function Messages() {
     return () => unsub();
 
   }, [currentUser, navigate, handledCallId, selectedChat]);
+
+  const cancelOutgoingCall = async () => {
+    if (!outgoingCall) return;
+    try {
+      await updateDoc(doc(db, "calls", outgoingCall.id), {
+        status: "cancelled",
+      });
+    } catch (err) {
+      console.warn("Failed to cancel call:", err);
+    }
+    setOutgoingCall(null);
+  };
 
   /* 📞 CALL FEATURE END */
 
@@ -857,6 +901,25 @@ export default function Messages() {
             </div>
           </>
 
+        )}
+
+        {outgoingCall && (
+          <div className="call-popup">
+            <div className="call-popup-card">
+              <div className="call-popup-avatar">
+                <div className="call-popup-ring" />
+                <span>{(outgoingCall.receiverName || "User").slice(0, 1).toUpperCase()}</span>
+              </div>
+              <p className="call-popup-title">Calling</p>
+              <h3>{outgoingCall.receiverName || "User"}</h3>
+              <p className="call-popup-subtitle">
+                {String(outgoingCall.type || "Video")} call... waiting for answer
+              </p>
+              <button className="call-popup-end" onClick={cancelOutgoingCall}>
+                End Call
+              </button>
+            </div>
+          </div>
         )}
 
       </section>
