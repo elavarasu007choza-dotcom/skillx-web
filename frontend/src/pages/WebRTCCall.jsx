@@ -222,7 +222,21 @@ export default function WebRTCCall() {
           ) {
             // Create transceivers in consistent order: audio, video, audio, video
             // This ensures m-lines don't change across offers
-            const audioTrack = localStream.current.getAudioTracks()[0];\n            const videoTrack = localStream.current.getVideoTracks()[0];\n\n            if (audioTrack) {\n              pc.current.addTransceiver(audioTrack, { \n                streams: [localStream.current],\n                direction: 'sendrecv'\n              });\n            }\n            if (videoTrack) {\n              pc.current.addTransceiver(videoTrack, { \n                streams: [localStream.current],\n                direction: 'sendrecv'\n              });\n            }
+            const audioTrack = localStream.current.getAudioTracks()[0];
+            const videoTrack = localStream.current.getVideoTracks()[0];
+
+            if (audioTrack) {
+              pc.current.addTransceiver(audioTrack, { 
+                streams: [localStream.current],
+                direction: 'sendrecv'
+              });
+            }
+            if (videoTrack) {
+              pc.current.addTransceiver(videoTrack, { 
+                streams: [localStream.current],
+                direction: 'sendrecv'
+              });
+            }
           }
         } catch (err) {
           console.error("Failed to add tracks:", err);
