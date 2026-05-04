@@ -43,7 +43,7 @@ return (
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
         <Route path="/video-call/:roomID" element={<VideoCall />} />
-        <Route path="/webrtc/:roomID" element={<WebRTCCall />} />
+        {/* <Route path="/webrtc/:roomID" element={<WebRTCCall />} /> */}
         <Route path="/call-history" element={<ProtectedRoute><CallHistory /></ProtectedRoute>} />
 
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
