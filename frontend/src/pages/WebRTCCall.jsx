@@ -408,7 +408,7 @@ export default function WebRTCCall() {
       hasStartedRef.current = false;
       startInFlightRef.current = false;
     };
-  }, [callType, navigate, recordCallHistory, role, roomID]);
+  }, [callType, closeStreams, navigate, recordCallHistory, role, roomID]);
 
   const toggleMic = () => {
     localStream.current?.getAudioTracks().forEach((t) => {
