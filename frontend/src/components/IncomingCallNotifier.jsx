@@ -70,7 +70,7 @@ await updateDoc(doc(db, "calls", incomingCall.docId), {
 status: "accepted",
 });
 const resolvedType = String(incomingCall.type || "video").toLowerCase();
-navigate(`/webrtc/${incomingCall.roomID}?role=callee&User=${incomingCall.caller}&name=${incomingCall.callerName}&type=${resolvedType}`);
+  navigate(`/video-call/${incomingCall.roomID}?role=callee&User=${incomingCall.caller}&name=${incomingCall.callerName}&type=${resolvedType}`);
 setIncomingCall(null);
 };
 

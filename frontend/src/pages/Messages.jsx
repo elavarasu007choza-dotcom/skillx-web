@@ -396,7 +396,7 @@ export default function Messages() {
 
           const resolvedType = String(data.type || "Video").toLowerCase();
           navigate(
-            `/webrtc/${data.roomID}?role=caller&User=${data.receiver}&name=${data.receiverName}&type=${resolvedType}`
+            `/video-call/${data.roomID}?role=caller&User=${data.receiver}&name=${data.receiverName}&type=${resolvedType}`
           );
 
         }
