@@ -329,10 +329,15 @@ export default function WebRTCCall() {
             if (!pc.current.remoteDescription && data.offer && !isCaller) {
               await pc.current.setRemoteDescription(data.offer);
               const answer = await pc.current.createAnswer();
-              if (pc.current.signalingState !== "closed" && startToken === startTokenRef.current) {
-                await pc.current.setLocalDescription(answer);
+              if (pc.current.signalingState === "have-remote-offer" && startToken === startTokenRef.current) {
+                try {
+                  await pc.current.setLocalDescription(answer);
+                } catch (err) {
+                  console.warn("Failed to set local description:", err);
+                  return;
+                }
               }
-              if (startToken === startTokenRef.current) {
+              if (startToken === startTokenRef.current && pc.current.localDescription) {
                 await updateDoc(roomRef, {
                   answer,
                   answerForOfferId: data.offerId || null,
@@ -442,9 +447,19 @@ export default function WebRTCCall() {
     }
 
     try {
-      screenStream.current = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+      const constraints = {
+        video: {
+          cursor: "always"
+        },
+        audio: false
+      };
+
+      screenStream.current = await navigator.mediaDevices.getDisplayMedia(constraints).catch(() => {
+        setStatus("Screen share not supported on this device");
+        return null;
       });
+
+      if (!screenStream.current) return;
 
       if (
         !pc.current ||
@@ -541,7 +556,7 @@ export default function WebRTCCall() {
     );
 
     const snapshot = await getDocs(q);
-    if (snapshot.empty) {
+    if (snapshot.empty && remoteUserId) {
       setTargetUserId(remoteUserId);
       setRoomIDState(roomID);
       setShowRating(true);
