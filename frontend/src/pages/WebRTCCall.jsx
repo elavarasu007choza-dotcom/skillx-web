@@ -84,6 +84,45 @@ export default function WebRTCCall() {
     return new URLSearchParams(window.location.search).get("User");
   }, []);
 
+  const buildCallPayload = useCallback((statusValue) => {
+    const duration = callStartTime.current
+      ? Math.floor((Date.now() - callStartTime.current) / 1000)
+      : 0;
+
+    return {
+      caller: auth.currentUser?.uid,
+      callerName: auth.currentUser?.email,
+      receiver: remoteUserId || null,
+      receiverName: remoteName || null,
+      participants: remoteUserId
+        ? [auth.currentUser?.uid, remoteUserId]
+        : [auth.currentUser?.uid],
+      roomID,
+      status: statusValue,
+      duration,
+      type: callType,
+      createdAt: serverTimestamp(),
+    };
+  }, [callType, remoteName, remoteUserId, roomID]);
+
+  const recordCallHistory = useCallback(async (statusValue) => {
+    if (hasRecordedRef.current) return;
+    hasRecordedRef.current = true;
+
+    try {
+      await addDoc(collection(db, "callHistory"), buildCallPayload(statusValue));
+    } catch (err) {
+      console.error("Error saving call history:", err);
+    }
+  }, [buildCallPayload]);
+
+  const closeStreams = useCallback(() => {
+    isClosingRef.current = true;
+    localStream.current?.getTracks().forEach((t) => t.stop());
+    screenStream.current?.getTracks().forEach((t) => t.stop());
+    pc.current?.close();
+  }, []);
+
   useEffect(() => {
     const name = new URLSearchParams(window.location.search).get("name");
     if (name) setRemoteName(name);
@@ -472,45 +511,6 @@ export default function WebRTCCall() {
     screenStream.current = null;
     setScreenOn(false);
   };
-
-  const buildCallPayload = useCallback((statusValue) => {
-    const duration = callStartTime.current
-      ? Math.floor((Date.now() - callStartTime.current) / 1000)
-      : 0;
-
-    return {
-      caller: auth.currentUser?.uid,
-      callerName: auth.currentUser?.email,
-      receiver: remoteUserId || null,
-      receiverName: remoteName || null,
-      participants: remoteUserId
-        ? [auth.currentUser?.uid, remoteUserId]
-        : [auth.currentUser?.uid],
-      roomID,
-      status: statusValue,
-      duration,
-      type: callType,
-      createdAt: serverTimestamp(),
-    };
-  }, [callType, remoteName, remoteUserId, roomID]);
-
-  const recordCallHistory = useCallback(async (statusValue) => {
-    if (hasRecordedRef.current) return;
-    hasRecordedRef.current = true;
-
-    try {
-      await addDoc(collection(db, "callHistory"), buildCallPayload(statusValue));
-    } catch (err) {
-      console.error("Error saving call history:", err);
-    }
-  }, [buildCallPayload]);
-
-  const closeStreams = useCallback(() => {
-    isClosingRef.current = true;
-    localStream.current?.getTracks().forEach((t) => t.stop());
-    screenStream.current?.getTracks().forEach((t) => t.stop());
-    pc.current?.close();
-  }, []);
 
   const handleLeave = async () => {
     if (hasEndedRef.current) return;
