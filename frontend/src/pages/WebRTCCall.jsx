@@ -154,15 +154,32 @@ export default function WebRTCCall() {
 
         pc.current.onconnectionstatechange = () => {
           const state = pc.current?.connectionState || "";
-          if (state === "connected") setStatus("Connected");
-          if (state === "failed") setStatus("Connection failed");
+          console.log("Connection state:", state);
+          if (state === "connected") {
+            setStatus("Connected");
+            console.log("WebRTC connection established");
+          }
+          if (state === "failed") {
+            setStatus("Connection failed");
+            console.error("WebRTC connection failed");
+          }
           if (state === "disconnected") setStatus("Disconnected");
         };
 
         pc.current.ontrack = (e) => {
           if (!isMounted) return;
-          remoteVideo.current.srcObject = e.streams[0];
-          setRemoteVideoReady(true);
+          console.log("Remote track received:", e);
+          if (e.streams && e.streams[0]) {
+            remoteVideo.current.srcObject = e.streams[0];
+            // Ensure video plays
+            remoteVideo.current.play().catch(err => console.warn("Video play error:", err));
+            setRemoteVideoReady(true);
+          }
+        };
+
+        pc.current.oniceconnectionstatechange = () => {
+          const state = pc.current?.iceConnectionState || "";
+          console.log("ICE connection state:", state);
         };
 
         const wantsVideo = callType === "video";
@@ -205,15 +222,7 @@ export default function WebRTCCall() {
           ) {
             // Create transceivers in consistent order: audio, video, audio, video
             // This ensures m-lines don't change across offers
-            const audioTrack = localStream.current.getAudioTracks()[0];
-            const videoTrack = localStream.current.getVideoTracks()[0];
-
-            if (audioTrack) {
-              pc.current.addTransceiver(audioTrack, { streams: [localStream.current] });
-            }
-            if (videoTrack) {
-              pc.current.addTransceiver(videoTrack, { streams: [localStream.current] });
-            }
+            const audioTrack = localStream.current.getAudioTracks()[0];\n            const videoTrack = localStream.current.getVideoTracks()[0];\n\n            if (audioTrack) {\n              pc.current.addTransceiver(audioTrack, { \n                streams: [localStream.current],\n                direction: 'sendrecv'\n              });\n            }\n            if (videoTrack) {\n              pc.current.addTransceiver(videoTrack, { \n                streams: [localStream.current],\n                direction: 'sendrecv'\n              });\n            }
           }
         } catch (err) {
           console.error("Failed to add tracks:", err);
@@ -625,7 +634,12 @@ export default function WebRTCCall() {
           </div>
         )}
         <div className="webrtc-remote">
-          <video ref={remoteVideo} autoPlay playsInline />
+          <video 
+            ref={remoteVideo} 
+            autoPlay 
+            playsInline 
+            style={{width: '100%', height: '100%', objectFit: 'cover'}}
+          />
           {!remoteVideoReady && (
             <div className="webrtc-placeholder">Waiting for peer...</div>
           )}
