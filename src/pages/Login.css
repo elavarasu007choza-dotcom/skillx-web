@@ -361,13 +361,37 @@
   border: none;
   background: #ffffff;
   color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   cursor: pointer;
   font-weight: 600;
   transition: 0.2s ease;
 }
 
+.google-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.google-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
 .google-btn:hover {
   transform: translateY(-1px);
+}
+
+.google-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .login-footer {

@@ -204,7 +204,7 @@
     padding: 3px 8px;
     font-size: 11px;
   }
-  
+
   .openreq-container .accept-btn,
   .openreq-container .close-btn {
     padding: 5px 10px;
@@ -227,16 +227,55 @@
     font-size: 10px;
     padding: 2px 6px;
   }
+
+  /* Make AI suggestion and mutual match cards use full available width
+     and avoid being clipped on mobile. Also ensure they can scroll inside
+     their panels when there are multiple items. */
+  .right .suggest,
+  .right .ai-suggestion-card,
+  .right .mutual-match-card,
+  .right .mutual-matches-list {
+    width: 100%;
+    display: block;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  .right .ai-suggestion-card img,
+  .right .mutual-match-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+
+  /* Ensure container doesn't force full viewport height on mobile
+     and allow inner panels to scroll independently so Mutual Matches
+     cards remain reachable. */
+  .openreq-container {
+    min-height: auto;
+    height: auto;
+  }
+
+  /* Scrollable inner lists for mobile panels */
+  .open-requests-scroll,
+  .ai-suggestions-scroll,
+  .mutual-matches-scroll {
+    max-height: calc(100svh - 200px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Premium + Modern + Glassmorphism + Corporate overrides */
 .openreq-container {
   min-height: 100vh;
+  height: 100vh;
   padding: 24px;
   padding-top: 78px;
   gap: 16px;
   font-family: "Sora", "Poppins", sans-serif;
   position: relative;
+  overflow: hidden;
   background:
     radial-gradient(1100px 520px at -10% -20%, #dbeafe 0%, transparent 58%),
     radial-gradient(900px 420px at 110% -10%, #e0f2fe 0%, transparent 54%),
@@ -266,10 +305,26 @@
 
 .openreq-container .left {
   width: 64%;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 102px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .openreq-container .right {
   width: 36%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: calc(100vh - 102px);
+  min-height: 0;
+  overflow: hidden;
+  padding-right: 6px;
+}
+
+.openreq-container .right > .panel {
+  flex: 0 0 auto;
 }
 
 .openreq-container .left > h2 {
@@ -277,6 +332,14 @@
   font-size: 26px;
   letter-spacing: -0.02em;
   color: #0f172a;
+}
+
+.openreq-container .open-requests-scroll {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .openreq-container .card,
@@ -353,6 +416,23 @@
   font-size: 18px;
 }
 
+.openreq-container .ai-suggestions-panel,
+.openreq-container .mutual-matches-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.openreq-container .ai-suggestions-scroll,
+.openreq-container .mutual-matches-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0;
+}
+
 .openreq-container .panel.info-panel ul {
   margin: 8px 0 0;
 }
@@ -365,16 +445,99 @@
 @media (max-width: 1024px) {
   .openreq-container {
     flex-direction: column;
+    height: 100svh;
+    min-height: 100svh;
+    overflow: hidden;
     padding-top: 72px;
   }
 
   .openreq-container .left,
   .openreq-container .right {
     width: 100%;
+    height: calc((100svh - 112px) / 2);
+    min-height: 0;
+  }
+
+  .openreq-container .left {
+    overflow: hidden;
+  }
+
+  .openreq-container .right {
+    overflow: hidden;
+    padding-right: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr 1fr auto auto;
+    gap: 10px;
+    align-content: stretch;
+  }
+
+  .openreq-container .right > .panel {
+    margin-bottom: 0;
+    min-height: 0;
   }
 
   .openreq-container .back-btn {
     left: 16px;
     top: 16px;
+  }
+
+  .openreq-container .open-requests-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0;
+  }
+
+  .openreq-container .ai-suggestions-panel,
+  .openreq-container .mutual-matches-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .openreq-container .ai-suggestions-scroll,
+  .openreq-container .mutual-matches-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .openreq-container {
+    padding: 10px;
+    padding-top: 66px;
+    gap: 10px;
+    height: auto;
+    min-height: 100svh;
+    overflow-y: auto;
+  }
+
+  .openreq-container .left,
+  .openreq-container .right {
+    height: auto;
+    min-height: 0;
+  }
+
+  .openreq-container .right {
+    display: flex;
+    grid-template-rows: none;
+    overflow: visible;
+    gap: 10px;
+    padding-right: 0;
+  }
+
+  .openreq-container .open-requests-scroll,
+  .openreq-container .ai-suggestions-scroll,
+  .openreq-container .mutual-matches-scroll {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .openreq-container .right .panel.info-panel {
+    display: block;
   }
 }

@@ -3,13 +3,25 @@ import "./LandingPage.css";
 
 function LandingPage() {
   const navigate = useNavigate();
+  const handleAboutClick = () => {
+    const section = document.getElementById("about-skillx");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <div className="lp">
       {/* Top Nav */}
       <header className="lp-nav">
-        <div className="lp-brand">SkillX</div>
+        <div className="lp-brand">
+          <span className="lp-brand-logo" aria-hidden="true">🎯</span>
+          <span>SkillX</span>
+        </div>
         <nav className="lp-nav-actions">
+          <button className="lp-link" type="button" onClick={handleAboutClick}>
+            About SkillX
+          </button>
           <button className="lp-link" onClick={() => navigate("/login")}>
             Login
           </button>
@@ -82,6 +94,69 @@ function LandingPage() {
         <div className="feature-card">
           <h4>Built for Growth</h4>
           <p>Learn, teach, and build together.</p>
+        </div>
+      </section>
+
+      {/* About */}
+      <section className="lp-about" id="about-skillx">
+        <div className="lp-about-header">
+          <p className="lp-eyebrow">About SkillX</p>
+          <h2>How SkillX works and how to use it</h2>
+          <p className="lp-about-subtext">
+            SkillX is a peer-to-peer skill exchange platform. Create your profile, list the skills
+            you can teach, pick what you want to learn, and start real sessions with verified users.
+          </p>
+        </div>
+
+        <div className="lp-about-steps">
+          <div className="lp-step">
+            <div className="lp-step-badge">1</div>
+            <div>
+              <h3>Create your profile</h3>
+              <p>
+                Add your bio, profession, skills to teach, and skills you want to learn. This
+                helps others match with you faster.
+              </p>
+            </div>
+          </div>
+
+          <div className="lp-step">
+            <div className="lp-step-badge">2</div>
+            <div>
+              <h3>Find the right match</h3>
+              <p>
+                Browse requests, check profiles, and start a conversation. The requests and
+                messages pages keep everything organized.
+              </p>
+            </div>
+          </div>
+
+          <div className="lp-step">
+            <div className="lp-step-badge">3</div>
+            <div>
+              <h3>Schedule sessions</h3>
+              <p>
+                Pick a time, join the video call, and collaborate on the whiteboard. You can also
+                share files and notes during the session.
+              </p>
+            </div>
+          </div>
+
+          <div className="lp-step">
+            <div className="lp-step-badge">4</div>
+            <div>
+              <h3>Rate and build reputation</h3>
+              <p>
+                Leave feedback after each session. Your rating unlocks badges and helps you
+                build trust in the community.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="lp-about-cta">
+          <button className="lp-btn primary" onClick={() => navigate("/signup")}>Get Started</button>
+          <button className="lp-btn secondary" onClick={() => navigate("/login")}>I already have an account</button>
         </div>
       </section>
 

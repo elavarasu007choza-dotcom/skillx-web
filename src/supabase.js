@@ -1,6 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://xdfsxwirrgwnulekyifw.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkZnN4d2lycmd3bnVsZWt5aWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTE2NzcsImV4cCI6MjA5MTY4NzY3N30.g4BsB2PpiG6gDFz0FDj2_U7aShclbSHvUxMij7NkOD4';
+const getEnv = (key, fallback) => {
+	const value = process.env[key];
+	return typeof value === "string" && value.trim() ? value : fallback;
+};
+
+const supabaseUrl = getEnv("REACT_APP_SUPABASE_URL", "https://xdfsxwirrgwnulekyifw.supabase.co");
+const supabaseKey = getEnv(
+	"REACT_APP_SUPABASE_KEY",
+	"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkZnN4d2lycmd3bnVsZWt5aWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTE2NzcsImV4cCI6MjA5MTY4NzY3N30.g4BsB2PpiG6gDFz0FDj2_U7aShclbSHvUxMij7NkOD4"
+);
 
 export const supabase = createClient(supabaseUrl, supabaseKey);

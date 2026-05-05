@@ -113,7 +113,7 @@ export default function SessionReminder() {
                 status: "completed"
               });
             } catch (e) {
-              console.log("Session status update error:", e);
+              console.error("Session status update error:", e);
             }
           }
         }

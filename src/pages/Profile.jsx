@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { auth, db } from "../firebase";
 import { collection, doc, onSnapshot, query, setDoc, where } from "firebase/firestore";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
-import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
+import { isProfileIncomplete } from "../utils/profileCompletion";
+
+const getEnv = (key, fallback) => {
+  const value = process.env[key];
+  return typeof value === "string" && value.trim() ? value : fallback;
+};
 
 /* 🔥 Reputation Badge */
 function ReputationBadge({ score }) {
@@ -19,11 +24,11 @@ function ReputationBadge({ score }) {
 const uploadToCloudinary = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "profile_upload");
+  formData.append("upload_preset", getEnv("REACT_APP_CLOUDINARY_UPLOAD_PRESET", "skillx_files"));
 
   try {
     const res = await fetch(
-      "https://api.cloudinary.com/v1_1/dyvfflwuo/image/upload",
+      `https://api.cloudinary.com/v1_1/${getEnv("REACT_APP_CLOUDINARY_CLOUD_NAME", "dyvfflwuo")}/image/upload`,
       {
         method: "POST",
         body: formData,
@@ -33,12 +38,13 @@ const uploadToCloudinary = async (file) => {
     const data = await res.json();
     return data.secure_url;
   } catch (err) {
-    console.error(err);
+    console.error("Cloudinary upload error:", err);
   }
 };
 
 export default function Profile() {
-  const navigate =useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
   const handleShareProfile = async () => {
     const profileUid = uid || auth.currentUser?.uid;
     if (!profileUid) return;
@@ -70,11 +76,7 @@ export default function Profile() {
     const file = e.target.files[0];
     if (!file) return;
 
-    console.log("File selected:", file); // 🔍 debug
-
     const url = await uploadToCloudinary(file);
-
-    console.log("Uploaded URL:", url); // 🔍 debug
 
     setProfile({ ...profile, coverURL: url });
 
@@ -94,7 +96,13 @@ export default function Profile() {
   const { uid } = useParams();
   const [toast, setToast] = useState("");
 
-  const isOwnProfile = !uid;
+  const isOwnProfile = !uid || uid === auth.currentUser?.uid;
+
+  useEffect(() => {
+    if (location.state?.startEdit && isOwnProfile) {
+      setEditMode(true);
+    }
+  }, [location.state, isOwnProfile]);
 
   const [profile, setProfile] = useState({
     name: "",
@@ -129,6 +137,101 @@ export default function Profile() {
   const [teachInput, setTeachInput] = useState("");
   const [teachLevel, setTeachLevel] = useState("");
   const bioRef = useRef(null);
+
+  const generateBioSuggestion = () => {
+    const name = profile.name || "I";
+    const profession = profile.profession || "skill learner";
+    const level = profile.level || "Intermediate";
+    const language = profile.language || "English";
+
+    const teach = formatSkills(profile.teachSkills)
+      .map((s) => (typeof s === "string" ? s : s?.name))
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(", ");
+
+    const learn = formatSkills(profile.learnSkills)
+      .map((s) => (typeof s === "string" ? s : s?.name))
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(", ");
+
+    const lines = [
+      `Hi, I am ${name}, a ${level} ${profession}.`,
+      `I collaborate in ${language}.`,
+      teach ? `I can help others with ${teach}.` : "I enjoy helping others through practical sessions.",
+      learn ? `Currently I am learning ${learn}.` : "I am always open to learning new skills and sharing ideas.",
+      "Let us connect and grow together on SkillX."
+    ];
+
+    setProfile((prev) => ({ ...prev, bio: lines.join(" ") }));
+  };
+
+  const suggestSkills = () => {
+    const profession = (profile.profession || "").toLowerCase();
+    const level = profile.level || "Intermediate";
+
+    const presets = {
+      developer: {
+        teach: [
+          { name: "JavaScript", level },
+          { name: "React", level },
+          { name: "Git", level }
+        ],
+        learn: ["System Design", "TypeScript"]
+      },
+      designer: {
+        teach: [
+          { name: "UI Design", level },
+          { name: "Figma", level },
+          { name: "Design Systems", level }
+        ],
+        learn: ["Motion Design", "UX Research"]
+      },
+      student: {
+        teach: [
+          { name: "Communication", level },
+          { name: "Presentation", level }
+        ],
+        learn: ["Problem Solving", "Time Management", "Interview Skills"]
+      },
+      default: {
+        teach: [
+          { name: "Communication", level },
+          { name: "Collaboration", level }
+        ],
+        learn: ["Public Speaking", "Critical Thinking"]
+      }
+    };
+
+    let bucket = presets.default;
+    if (profession.includes("develop") || profession.includes("engineer")) bucket = presets.developer;
+    else if (profession.includes("design")) bucket = presets.designer;
+    else if (profession.includes("student")) bucket = presets.student;
+
+    const existingTeach = formatSkills(profile.teachSkills).map((s) =>
+      typeof s === "string" ? s.toLowerCase() : (s?.name || "").toLowerCase()
+    );
+    const existingLearn = formatSkills(profile.learnSkills).map((s) =>
+      typeof s === "string" ? s.toLowerCase() : (s?.name || "").toLowerCase()
+    );
+
+    const mergedTeach = [
+      ...formatSkills(profile.teachSkills),
+      ...bucket.teach.filter((s) => !existingTeach.includes(s.name.toLowerCase()))
+    ];
+
+    const mergedLearn = [
+      ...formatSkills(profile.learnSkills),
+      ...bucket.learn.filter((s) => !existingLearn.includes(s.toLowerCase()))
+    ];
+
+    setProfile((prev) => ({
+      ...prev,
+      teachSkills: mergedTeach,
+      learnSkills: mergedLearn
+    }));
+  };
 
 
 
@@ -229,11 +332,7 @@ export default function Profile() {
     const file = e.target.files[0];
     if (!file) return;
 
-    console.log("Photo file:", file); // debug
-
     const url = await uploadToCloudinary(file);
-
-    console.log("Photo URL:", url); // debug
 
     setProfile({
       ...profile,
@@ -325,14 +424,18 @@ export default function Profile() {
   const handleSave = async () => {
     if (!auth.currentUser) return;
 
+    const normalizedProfile = {
+      ...profile,
+      teachSkills: formatSkills(profile.teachSkills),
+      learnSkills: formatSkills(profile.learnSkills),
+    };
+    const profileCompleted = !isProfileIncomplete(normalizedProfile);
+
     await setDoc(
       doc(db, "users", auth.currentUser.uid),
       {
-        ...profile,
-
-        /* 🔥 STORE AS ARRAY */
-        teachSkills: formatSkills(profile.teachSkills),
-        learnSkills: formatSkills(profile.learnSkills),
+        ...normalizedProfile,
+        profileCompleted,
 
         uid: auth.currentUser.uid,
         email: auth.currentUser.email,
@@ -402,7 +505,7 @@ export default function Profile() {
             title="Share Profile"
             aria-label="Share Profile"
           >
-            ↗
+            🔗
           </button>
           {isOwnProfile && (
             <button
@@ -411,7 +514,7 @@ export default function Profile() {
               title={editMode ? "Cancel Edit" : "Edit Profile"}
               aria-label={editMode ? "Cancel Edit" : "Edit Profile"}
             >
-              {editMode ? "✕" : "✎"}
+              {editMode ? "✕" : "✏️"}
             </button>
           )}
         </div>
@@ -466,6 +569,13 @@ export default function Profile() {
       {/* 🔷 ABOUT */}
       <div className="profile-card">
         <h3>About</h3>
+        {editMode && (
+          <div className="ai-suggest-row">
+            <button type="button" className="ai-suggest-btn" onClick={generateBioSuggestion}>
+              AI Suggest About
+            </button>
+          </div>
+        )}
 
         <textarea
           ref={bioRef}
@@ -514,6 +624,13 @@ export default function Profile() {
       {/* 🔷 SKILLS */}
       <div className="profile-card">
         <h3>Skills</h3>
+        {editMode && (
+          <div className="ai-suggest-row">
+            <button type="button" className="ai-suggest-btn" onClick={suggestSkills}>
+              AI Suggest Skills
+            </button>
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: "10px" }}></div>
         <input

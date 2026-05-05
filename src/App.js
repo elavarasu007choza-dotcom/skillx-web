@@ -7,7 +7,8 @@ import Signup from "./pages/Signup";
 import VideoCall from "./components/VideoCall";
 import IncomingCallNotifier from "./components/IncomingCallNotifier";
 import SessionReminder from "./components/SessionReminder";
-// import WebRTCCall from "./pages/WebRTCCall";
+// eslint-disable-next-line no-unused-vars
+import WebRTCCall from "./pages/WebRTCCall";
 import CallHistory from "./pages/CallHistory";
 import { initNotificationSounds } from "./utils/notificationSound";
 
@@ -43,7 +44,7 @@ return (
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
         <Route path="/video-call/:roomID" element={<VideoCall />} />
-        {/* <Route path="/webrtc/:roomID" element={<WebRTCCall />} />  */}
+        {/* <Route path="/webrtc/:roomID" element={<WebRTCCall />} /> */}
         <Route path="/call-history" element={<ProtectedRoute><CallHistory /></ProtectedRoute>} />
 
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

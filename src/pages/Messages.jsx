@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   collection,
   doc,
@@ -38,6 +38,7 @@ export default function Messages() {
   const [uploadedFile, setUploadedFile] = useState(null);
 
   const [handledCallId, setHandledCallId] = useState(null);
+  const [outgoingCall, setOutgoingCall] = useState(null);
 
   const typingTimeout = useRef(null);
   const lastMsgCount = useRef(0);
@@ -61,6 +62,7 @@ export default function Messages() {
 
   const rtdb = getDatabase();
   const location = useLocation();
+  const routeChatId = useMemo(() => location.state?.chatId || "", [location.state]);
   const navigate = useNavigate();
   const { userId: routeUserId } = useParams();
 
@@ -180,28 +182,27 @@ export default function Messages() {
       list.sort((a, b) => b.updatedAt - a.updatedAt);
       setChats(list);
 
-      if (!selectedChat) {
+      if (list.length === 0) {
+        setSelectedChat(null);
+        return;
+      }
 
-        if (location.state?.chatId) {
-
-          const match = list.find((c) => c.id === location.state.chatId);
-
-          if (match) {
-            setSelectedChat(match);
-            return;
-          }
-
+      if (routeChatId) {
+        const routeMatch = list.find((c) => c.id === routeChatId);
+        if (routeMatch && selectedChat?.id !== routeMatch.id) {
+          setSelectedChat(routeMatch);
+          return;
         }
+      }
 
-        if (list.length > 0) {
-          setSelectedChat(list[0]);
-        }
-
+      const activeInList = selectedChat && list.some((c) => c.id === selectedChat.id);
+      if (!activeInList) {
+        setSelectedChat(list[0]);
       }
 
     });
 
-  }, [currentUser, presenceMap, usersMap, location, selectedChat]);
+  }, [currentUser, presenceMap, usersMap, routeChatId, selectedChat]);
 
   useEffect(() => {
     if (!currentUser || chats.length === 0) {
@@ -308,14 +309,13 @@ export default function Messages() {
   const requestCall = async (type) => {
 
     if (!selectedChat) return;
-    console.log("CHAT DATA:", selectedChat);
 
     const roomID = "room_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
 
     const callerName = usersMap[currentUser?.uid]?.name || currentUser?.email || "User";
     const receiverId = selectedChat.otherUid || selectedChat?.uid;
 
-    await addDoc(collection(db, "calls"), {
+    const callDoc = await addDoc(collection(db, "calls"), {
       caller: currentUser.uid,
       callerName: callerName,
 
@@ -326,6 +326,14 @@ export default function Messages() {
       type,
       status: "ringing",
       createdAt: serverTimestamp(),
+    });
+
+    setOutgoingCall({
+      id: callDoc.id,
+      roomID,
+      type,
+      receiverId,
+      receiverName: selectedChat.otherName || selectedChat?.name || "User",
     });
 
     await sendNotification(
@@ -364,15 +372,32 @@ export default function Messages() {
         if (handledCallId === callDoc.id) return;
 
         const data = callDoc.data();
-        console.log("FULL DATA:",data);
+
+        if (data.status === "ringing") {
+          setOutgoingCall((prev) =>
+            prev && prev.id === callDoc.id
+              ? { ...prev, receiverName: data.receiverName || prev.receiverName }
+              : prev || {
+                  id: callDoc.id,
+                  roomID: data.roomID,
+                  type: data.type,
+                  receiverId: data.receiver,
+                  receiverName: data.receiverName || "User",
+                }
+          );
+        }
 
         if (data.status === "accepted") {
 
           setHandledCallId(callDoc.id);
+          setOutgoingCall(null);
 
           deleteDoc(doc(db, "calls", callDoc.id));
 
-          navigate(`/video-call/${data.roomID}?User=${data.receiver}&name=${data.receiverName}`);
+          const resolvedType = String(data.type || "Video").toLowerCase();
+          navigate(
+            `/video-call/${data.roomID}?role=caller&User=${data.receiver}&name=${data.receiverName}&type=${resolvedType}`
+          );
 
         }
 
@@ -389,18 +414,26 @@ export default function Messages() {
           });
 
           setHandledCallId(callDoc.id);
+          setOutgoingCall(null);
 
           deleteDoc(doc(db, "calls", callDoc.id));
 
           if (selectedChat) {
             addDoc(collection(db, "chats", selectedChat.id, "messages"), {
-              text: `📞 Missed Call`,
+              text: `📞 Missed ${data.type} Call`,
               senderId: currentUser.uid,
               createdAt: serverTimestamp(),
-              seenBy: [currentUser.uid]
+              seenBy: [currentUser.uid],
+              callType: data.type,
+              callStatus: "missed"
             });
           }
 
+        }
+
+        if (data.status === "cancelled") {
+          setOutgoingCall(null);
+          deleteDoc(doc(db, "calls", callDoc.id));
         }
 
       });
@@ -409,7 +442,19 @@ export default function Messages() {
 
     return () => unsub();
 
-  }, [currentUser, navigate, handledCallId]);
+  }, [currentUser, navigate, handledCallId, selectedChat]);
+
+  const cancelOutgoingCall = async () => {
+    if (!outgoingCall) return;
+    try {
+      await updateDoc(doc(db, "calls", outgoingCall.id), {
+        status: "cancelled",
+      });
+    } catch (err) {
+      console.warn("Failed to cancel call:", err);
+    }
+    setOutgoingCall(null);
+  };
 
   /* 📞 CALL FEATURE END */
 
@@ -615,7 +660,15 @@ export default function Messages() {
             >
 
                 <div className="avatar-wrapper">
-                  <div className="avatar">{chat.otherName[0]}</div>
+                  {usersMap[chat.otherUid]?.photoURL ? (
+                    <img
+                      src={usersMap[chat.otherUid].photoURL}
+                      alt={chat.otherName}
+                      className="avatar avatar-img"
+                    />
+                  ) : (
+                    <div className="avatar">{chat.otherName?.[0] || "U"}</div>
+                  )}
                   {chat.otherOnline && <span className="online-dot" />}
                   {unreadMap[chat.id] && <span className="chat-unread-dot" />}
                 </div>
@@ -652,7 +705,13 @@ export default function Messages() {
 
             <div className="chat-header">
               <div className="chat-header-main">
-                <strong>{activeChat.otherName}</strong>
+                <strong 
+                  onClick={() => navigate(`/user/${activeChat.otherUid}`)}
+                  style={{ cursor: "pointer" }}
+                  title="View profile"
+                >
+                  {activeChat.otherName}
+                </strong>
                 <span className={`header-presence ${isOtherOnline ? "online" : "offline"}`}>
                   <span className={`header-dot ${isOtherOnline ? "online" : "offline"}`} />
                   {isTyping
@@ -701,7 +760,7 @@ export default function Messages() {
                     {m.callStatus === "missed" ? (
                       <>
                         <span>
-                          {m.senderId === currentUser.uid ? "📤 Missed Call" : "📥 Missed Call"}
+                          {m.senderId === currentUser.uid ? "📤 Missed" : "📥 Missed"} {m.callType || "Video"} Call
                         </span>
 
                         <button
@@ -842,6 +901,25 @@ export default function Messages() {
             </div>
           </>
 
+        )}
+
+        {outgoingCall && (
+          <div className="call-popup">
+            <div className="call-popup-card">
+              <div className="call-popup-avatar">
+                <div className="call-popup-ring" />
+                <span>{(outgoingCall.receiverName || "User").slice(0, 1).toUpperCase()}</span>
+              </div>
+              <p className="call-popup-title">Calling</p>
+              <h3>{outgoingCall.receiverName || "User"}</h3>
+              <p className="call-popup-subtitle">
+                {String(outgoingCall.type || "Video")} call... waiting for answer
+              </p>
+              <button className="call-popup-end" onClick={cancelOutgoingCall}>
+                End Call
+              </button>
+            </div>
+          </div>
         )}
 
       </section>

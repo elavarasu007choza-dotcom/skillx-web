@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   collection,
   query,
-  orderBy,
   onSnapshot,
   where,
   deleteDoc,
@@ -10,31 +9,49 @@ import {
   updateDoc,
   arrayUnion,
 } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../firebase";
 import BackButton from "../components/BackButton";
 
 export default function CallHistory() {
   const [calls, setCalls] = useState([]);
+  const [uid, setUid] = useState(null);
 
   useEffect(() => {
-    if (!auth.currentUser?.uid) return;
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      setUid(user?.uid || null);
+    });
+
+    return () => unsubAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!uid) {
+      setCalls([]);
+      return;
+    }
 
     const q = query(
       collection(db, "callHistory"),
-      where("participants", "array-contains", auth.currentUser.uid),
-      orderBy("createdAt", "desc")
+      where("participants", "array-contains", uid)
     );
 
     const unsub = onSnapshot(q, (snap) => {
       const list = snap.docs.map((d) => ({
         id: d.id,
         ...d.data(),
-      })).filter((item) => !(item.hiddenFor || []).includes(auth.currentUser.uid));
+      }))
+        .filter((item) => !(item.hiddenFor || []).includes(uid))
+        .sort((a, b) => {
+          const aMs = a.createdAt?.toMillis?.() || 0;
+          const bMs = b.createdAt?.toMillis?.() || 0;
+          return bMs - aMs;
+        });
       setCalls(list);
     });
 
     return () => unsub();
-  }, []);
+  }, [uid]);
 
   const formatTime = (sec) => {
     if (!sec || sec === 0) return "N/A";
