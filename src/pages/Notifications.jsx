@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { collection, query, where, onSnapshot, updateDoc, doc, orderBy, deleteDoc } from "firebase/firestore";
 import "./Notifications.css";
@@ -6,6 +7,7 @@ import BackButton from "../components/BackButton";
 
 export default function Notifications() {
   const [list, setList] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -55,6 +57,7 @@ export default function Notifications() {
       case "request": return "📨";
       case "match": return "🤝";
       case "session": return "📅";
+      case "session_completed": return "✅";
       case "review": return "⭐";
       case "certificate": return "🎓";
       case "connection": return "🔗";
@@ -80,7 +83,12 @@ export default function Notifications() {
         <div
           key={n.id}
           className={`notif-item type-${n.type || "default"} ${!n.seen ? "unread" : ""}`}
-          onClick={() => markAsRead(n.id)}
+          onClick={async () => {
+            await markAsRead(n.id);
+            if (n.type === "session_completed") {
+              navigate("/messages");
+            }
+          }}
         >
           <div className="notif-icon">{getIcon(n.type)}</div>
           <div className="notif-content">

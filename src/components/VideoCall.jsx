@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
-import { addDoc, collection, query, where, getDocs, doc, updateDoc, increment } from "firebase/firestore";
+import { addDoc, collection, query, where, getDocs, doc, updateDoc, increment, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../firebase";
+import { sendNotification } from "../utils/sendNotification";
 import { useNavigate } from "react-router-dom";
 import RateUser from "./RateUser";
 import Whiteboard from "./Whiteboard";
@@ -89,7 +90,7 @@ const VideoCall = () => {
           : 0;
         
         try {
-          await addDoc(collection(db, "callHistory"), {
+            const chRef = await addDoc(collection(db, "callHistory"), {
             caller: auth.currentUser?.uid,
             callerName: auth.currentUser?.email,
             receiver: remoteUserId,
@@ -101,7 +102,19 @@ const VideoCall = () => {
             duration: duration,
             type: "video",
             createdAt: new Date(),
-          });
+            });
+
+            // notify both participants about session completion
+            try {
+              if (remoteUserId) {
+                await sendNotification(remoteUserId, `Session in ${roomID} completed`, "session_completed", { title: "Session Completed", metadata: { roomID } });
+              }
+              if (auth.currentUser?.uid) {
+                await sendNotification(auth.currentUser.uid, `Session in ${roomID} completed`, "session_completed", { title: "Session Completed", metadata: { roomID } });
+              }
+            } catch (err) {
+              console.log("notify error", err);
+            }
 
           // CHECK ALREADY RATED
           const q = query(
@@ -121,7 +134,7 @@ const VideoCall = () => {
             const duration = callStartTime.current 
               ? Math.floor((Date.now() - callStartTime.current) / 1000) 
               : 0;
-            await addDoc(collection(db, "callHistory"), {
+            const chRef2 = await addDoc(collection(db, "callHistory"), {
               caller: auth.currentUser?.uid,
               callerName: auth.currentUser?.email,
               receiver: remoteUserId,
@@ -133,6 +146,17 @@ const VideoCall = () => {
               type: "video",
               createdAt: new Date(),
             });
+
+            try {
+              if (remoteUserId) {
+                await sendNotification(remoteUserId, `Session in ${roomID} completed`, "session_completed", { title: "Session Completed", metadata: { roomID } });
+              }
+              if (auth.currentUser?.uid) {
+                await sendNotification(auth.currentUser.uid, `Session in ${roomID} completed`, "session_completed", { title: "Session Completed", metadata: { roomID } });
+              }
+            } catch (err) {
+              console.log("notify error", err);
+            }
             navigate("/messages", { replace: true });
           }
 
@@ -192,6 +216,39 @@ const VideoCall = () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
+
+  // Listen for callHistory entries for this room so both participants see rating/completion prompts
+  useEffect(() => {
+    if (!roomIDState || !auth.currentUser) return;
+
+    const q = query(collection(db, "callHistory"), where("roomID", "==", roomIDState), where("status", "==", "completed"));
+    const unsub = onSnapshot(q, async (snap) => {
+      for (const change of snap.docChanges()) {
+        if (change.type !== "added") continue;
+        const data = change.doc.data();
+        const participants = data.participants || [];
+        const other = participants.find((p) => p !== auth.currentUser.uid);
+        if (!other) continue;
+
+        // if current user hasn't reviewed the other user for this room, show rating
+        try {
+          const rq = query(collection(db, "reviews"), where("fromUser", "==", auth.currentUser.uid), where("toUser", "==", other), where("roomID", "==", roomIDState));
+          const rSnap = await getDocs(rq);
+          if (rSnap.empty) {
+            setTargetUserId(other);
+            setRoomIDState(roomIDState);
+            setShowRating(true);
+          } else {
+            setShowCompletePopup(true);
+          }
+        } catch (err) {
+          console.log("callHistory listener error", err);
+        }
+      }
+    });
+
+    return () => unsub();
+  }, [roomIDState, isReady]);
 
   return (
     <>
