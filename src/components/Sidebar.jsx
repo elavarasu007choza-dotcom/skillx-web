@@ -164,6 +164,7 @@ export default function Sidebar({ isOpen }) {
           Messages
           {unreadChatsCount > 0 && <span className="req-dot"></span>}
         </NavLink>
+        <NavLink to="/notification-settings">Notification Settings</NavLink>
       </nav>
 
       <div

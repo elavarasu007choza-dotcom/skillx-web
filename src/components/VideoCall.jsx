@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { addDoc, collection, query, where, getDocs, doc, updateDoc, increment, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../firebase";
@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import RateUser from "./RateUser";
 import Whiteboard from "./Whiteboard";
 import { createPortal } from "react-dom";
-import { Button } from "@excalidraw/excalidraw";
 import CodeEditor from "./CodeEditor";
 
 const VideoCall = () => {
@@ -24,12 +23,15 @@ const VideoCall = () => {
   const [roomIDState, setRoomIDState] = useState(null);
 
   const [showWhiteboard, setShowWhiteboard] = useState(false);
-  const [minimized, setMinimized] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
   const [showEditor, setShowEditor] = useState(false);
   const [isEditorMinimized, setIsEditorMinimized] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const callType = useMemo(() => {
+    const typeParam = new URLSearchParams(window.location.search).get("type");
+    return typeParam === "audio" ? "audio" : "video";
+  }, []);
 
   useEffect(() => {
     setIsReady(true);
@@ -55,10 +57,9 @@ const VideoCall = () => {
     const params = new URLSearchParams(window.location.search);
     const remoteUserId = params.get("User");
     const remoteUserName = params.get("name");
-
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
-      719135717,
-      "3afe9c9f03987b9da0999aeefba1b151",
+      235800254,
+      "5af9fc6a5e7e6b0c8dcf2ec245f75698",
       roomID,
       userID,
       userName
@@ -100,7 +101,7 @@ const VideoCall = () => {
             roomID: roomID,
             status: "completed",
             duration: duration,
-            type: "video",
+            type: callType,
             createdAt: new Date(),
             });
 
@@ -143,7 +144,7 @@ const VideoCall = () => {
               roomID: roomID,
               status: "completed",
               duration: duration,
-              type: "video",
+              type: callType,
               createdAt: new Date(),
             });
 
@@ -161,7 +162,7 @@ const VideoCall = () => {
           }
 
         } catch (err) {
-          console.log("Error saving call history:", err);
+          console.error("Error saving call history:", err);
         }
       },
     });
@@ -172,7 +173,7 @@ const VideoCall = () => {
         zpRef.current = null;
       }
     };
-  }, [isReady]);
+  }, [isReady, navigate, callType]);
 
   
 
@@ -203,11 +204,11 @@ const VideoCall = () => {
           participants: [auth.currentUser?.uid],
           status: "abandoned",
           duration: duration,
-          type: "video",
+          type: callType,
           createdAt: new Date(),
         });
       } catch (err) {
-        console.log(err);
+        console.error("Error in beforeunload handler:", err);
       }
     };
 
@@ -215,7 +216,7 @@ const VideoCall = () => {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, []);
+  }, [callType]);
 
   // Listen for callHistory entries for this room so both participants see rating/completion prompts
   useEffect(() => {
@@ -287,7 +288,6 @@ const VideoCall = () => {
 
       <button
         onClick={() => {
-          console.log("WHITEBOARD CLICKED");
           setShowWhiteboard(prev => !prev);
         }}
         title="Open Whiteboard"

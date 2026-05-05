@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { auth, db, storage } from "../firebase";
-import { collection, doc, getDoc, onSnapshot, query, setDoc, where } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { auth, db } from "../firebase";
+import { collection, doc, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { useParams } from "react-router-dom";
 import "./Profile.css";
-import { set } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
 
@@ -91,7 +89,6 @@ export default function Profile() {
 
 
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [connectionCount, setConnectionCount] = useState(0);
   const { uid } = useParams();
@@ -128,7 +125,6 @@ export default function Profile() {
     (profile.totalReviews || 0) >= 1;
   const [skillLevel, setSkillLevel] = useState("");
   const [skillInput, setSkillInput] = useState("");
-  const [skills, setSkills] = useState([]);
   const [learnInput, setLearnInput] = useState("");
   const [teachInput, setTeachInput] = useState("");
   const [teachLevel, setTeachLevel] = useState("");
@@ -249,10 +245,6 @@ export default function Profile() {
       { photoURL: url },
       { merge: true }
     );
-
-
-
-    setUploading(false);
   };
 
 
