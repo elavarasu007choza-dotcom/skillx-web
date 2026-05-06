@@ -2,13 +2,9 @@
   "name": "skillx",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "functions"
-  ],
   "scripts": {
     "start": "npm --prefix frontend run start",
-    "build": "npm --prefix frontend run build"
+    "build": "npm --prefix frontend/frontend run build"
   },
   "dependencies": {
     "firebase-admin": "^13.8.0"
