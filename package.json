@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "npm --prefix frontend run start",
-    "build": "cd frontend && npm run build"
+    "build": "cd frontend/frontend && npm run build"
   },
   "dependencies": {
     "firebase-admin": "^13.8.0"
