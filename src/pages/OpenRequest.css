@@ -307,6 +307,10 @@
 .open-page .right-panel {
   width: 100%;
   min-width: 0;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
 }
 
 .open-page .card {

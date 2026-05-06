@@ -266,10 +266,18 @@
 
 .openreq-container .left {
   width: 64%;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
 }
 
 .openreq-container .right {
   width: 36%;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
 }
 
 .openreq-container .left > h2 {
