@@ -24,7 +24,6 @@ export default function FilePreview({ fileUrl, fileName, fileType }) {
   
   const handlePdfClick = (e) => {
     e.preventDefault();
-    console.log("🔗 Downloading file from:", fileUrl);
     
     // For Cloudinary URLs, add ?dl=true to force download
     const downloadUrl = fileUrl.includes("cloudinary.com")
@@ -38,8 +37,6 @@ export default function FilePreview({ fileUrl, fileName, fileType }) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    console.log("✅ Download initiated");
   };
   
   if (isPDF) {

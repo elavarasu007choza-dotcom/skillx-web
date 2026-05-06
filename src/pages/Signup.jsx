@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { isProfileIncomplete } from "../utils/profileCompletion";
 import "./Signup.css";
 
 function Signup() {
@@ -38,7 +39,7 @@ function Signup() {
       });
 
       alert("Account created successfully");
-      navigate("/login");
+      navigate("/profile", { state: { startEdit: true } });
     } catch (err) {
       alert(err.message);
     } finally {
@@ -65,9 +66,16 @@ function Signup() {
         });
       }
       
+      const needsProfile = isProfileIncomplete(userSnap.exists() ? userSnap.data() : {});
+
+      if (needsProfile) {
+        navigate("/profile", { replace: true, state: { startEdit: true } });
+        return;
+      }
+
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      console.log(err);
+      console.error("Google signup error:", err);
       alert("Google signup failed: " + err.message);
     } finally {
       setLoading(false);

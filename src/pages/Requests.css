@@ -1,10 +1,12 @@
 .requests-page {
   min-height: 100vh;
+  height: 100vh;
   padding: 24px;
   background:
     radial-gradient(1200px 500px at -10% -20%, #dbeafe 0%, transparent 55%),
     radial-gradient(900px 400px at 110% 0%, #e0f2fe 0%, transparent 50%),
     #f8fafc;
+  overflow: hidden;
 }
 
 .requests-page .requests-header {
@@ -14,6 +16,9 @@
   border: 1px solid #dbeafe;
   background: linear-gradient(135deg, #ffffff, #f8fbff);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .requests-page .requests-header h1 {
@@ -33,6 +38,8 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
+  height: calc(100vh - 198px);
+  min-height: 0;
 }
 
 .requests-page .left,
@@ -42,6 +49,11 @@
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .requests-page .left h2,
@@ -57,6 +69,13 @@
 .requests-page .middle > p {
   margin: 8px 0 0;
   color: #64748b;
+}
+
+.requests-page .requests-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .requests-page .request-card {
@@ -138,20 +157,43 @@
 
 @media (max-width: 920px) {
   .requests-page {
+    height: 100svh;
+    min-height: 100svh;
+    overflow: hidden;
     padding: 14px;
   }
 
   .requests-page .requests-grid {
     grid-template-columns: 1fr;
+    height: calc(100svh - 196px);
+    min-height: 0;
   }
 
   .requests-page .left,
   .requests-page .middle {
+    height: 100%;
+    max-height: calc((100svh - 220px) / 2);
+    min-height: 0;
+    overflow: hidden;
     padding: 14px;
+  }
+
+  .requests-page .requests-list-scroll {
+    overflow-y: auto;
+    padding-right: 0;
   }
 }
 
 @media (max-width: 560px) {
+  .requests-page .requests-grid {
+    height: calc(100svh - 186px);
+  }
+
+  .requests-page .left,
+  .requests-page .middle {
+    max-height: calc((100svh - 210px) / 2);
+  }
+
   .requests-page .requests-header h1 {
     font-size: 20px;
   }

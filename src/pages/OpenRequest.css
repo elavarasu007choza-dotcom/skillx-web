@@ -56,11 +56,35 @@
 /* MIDDLE */
 .open-page .middle-panel {
   width: 35%;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 130px);
+}
+
+.open-page .middle-panel h2 {
+  margin-bottom: 12px;
+  flex: 0 0 auto;
+}
+
+.open-page .community-requests-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 /* RIGHT */
 .open-page .right-panel {
   width: 30%;
+  display: flex;
+  flex-direction: column;
+}
+
+.open-page .my-requests-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 /* INPUT */
@@ -261,6 +285,26 @@
   
   .open-page .request-card p {
     font-size: 12px;
+  }
+
+  .open-page .middle-panel {
+    max-height: 42vh;
+    min-height: 240px;
+  }
+
+  .open-page .community-requests-scroll {
+    overflow-y: auto;
+    padding-right: 0;
+  }
+
+  .open-page .right-panel {
+    max-height: 36vh;
+    min-height: 220px;
+  }
+
+  .open-page .my-requests-scroll {
+    overflow-y: auto;
+    padding-right: 0;
   }
 }
 

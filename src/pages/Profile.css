@@ -451,9 +451,13 @@
   width: 40px;
   height: 40px;
   padding: 0;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Sora", sans-serif;
 }
 
 .profile-header {
@@ -547,4 +551,60 @@
   resize: none;
   overflow: hidden;
   line-height: 1.55;
+}
+
+.profile-page .ai-suggest-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.profile-page .ai-suggest-btn {
+  margin-top: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.profile-page .ai-suggest-btn:hover {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  transform: translateY(-1px);
+}
+
+/* Keep action icons visible on split-screen layouts */
+.profile-page .profile-header-card {
+  position: relative;
+  overflow: visible;
+}
+
+.profile-page .profile-header-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 40;
+  margin-bottom: 0;
+}
+
+.profile-page .profile-header {
+  padding-top: 24px;
+}
+
+@media (max-width: 1024px) {
+  .profile-page .profile-header-actions {
+    top: 10px;
+    right: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-page .profile-header-actions {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+  }
 }

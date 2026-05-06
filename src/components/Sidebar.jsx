@@ -65,6 +65,10 @@ export default function Sidebar({ isOpen }) {
     };
   }, []);
 
+  const avatarFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name
+  )}&background=2563eb&color=ffffff`;
+
   useEffect(() => {
     if (!auth.currentUser) return;
 
@@ -134,10 +138,6 @@ export default function Sidebar({ isOpen }) {
     };
   }, []);
 
-  const avatarFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    name
-  )}&background=2563eb&color=ffffff`;
-
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div
@@ -149,7 +149,6 @@ export default function Sidebar({ isOpen }) {
 
       <nav className="sidebar-menu">
         <NavLink to="/dashboard">Dashboard</NavLink>
-        <NavLink to="/profile">Profile</NavLink>
         <NavLink to="/send-request">Send Request</NavLink>
         <NavLink to="/post-open-request">Post Open Request</NavLink>
         <NavLink to="/open-requests">

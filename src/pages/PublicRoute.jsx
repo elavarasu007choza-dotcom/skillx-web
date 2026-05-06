@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 
-function ProtectedRoute({ children }) {
+function PublicRoute({ children }) {
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState(null);
-  const location = useLocation();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -17,18 +16,15 @@ function ProtectedRoute({ children }) {
     return () => unsub();
   }, []);
 
-  // ⏳ Firebase still checking
   if (checking) {
     return <div>Loading...</div>;
   }
 
-  // ❌ Not logged in
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
   }
 
-  // ✅ Logged in
   return children;
 }
 
-export default ProtectedRoute;
+export default PublicRoute;
